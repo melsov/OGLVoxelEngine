@@ -1,0 +1,9 @@
+*.opendb
+*external/
+*external/*
+*Debug/
+*Debug/*
+*packages/
+*packages/*
+*.vs/
+*.vs/*
