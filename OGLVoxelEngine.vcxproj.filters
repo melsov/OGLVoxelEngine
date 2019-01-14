@@ -120,10 +120,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="shader\TextureFragmentShader.fragmentshader">
+    <None Include="shader\TextureFragmentShader.glsl">
       <Filter>shader</Filter>
     </None>
-    <None Include="shader\TransformVertexShader.vertexshader">
+    <None Include="shader\TransformVertexShader.glsl">
       <Filter>shader</Filter>
     </None>
   </ItemGroup>
@@ -238,6 +238,9 @@
     </ClInclude>
     <ClInclude Include="MortonChunk.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LODFaceCoords.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

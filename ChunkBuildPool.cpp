@@ -258,10 +258,10 @@ void ChunkBuildPool::TestDrawDrawables(const VECam::CamData& cam)
 
 		if (inFrustum)
 		{
-			int lod = 0; 
+			int lod = DEBUGLODLEVEL >= 0 ? DEBUGLODLEVEL : 0; 
 			// TODO: choose lod func. based on cpos cam pos;
 			// it->second.get()->set[lod]->Draw(View, Proj);
-			it->second.get()->Draw(View, Proj);
+			it->second.get()->Draw(View, Proj, lod);
 		}
 
 	}

@@ -80,6 +80,8 @@ public:
 		printf("meshed has: %d\n", meshed.size());
 	}
 
+	int DEBUGLODLEVEL;
+
 #pragma region unload
 
 	void Unload(veci3 cpos);

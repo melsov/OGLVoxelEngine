@@ -62,6 +62,16 @@ bool Chunk::voxelAtSafe(ivec3 pos, Voxel & voxel)
 	return false;
 }
 
+bool Chunk::voxelAtSafe(int x, int y, int z, Voxel & voxel)
+{
+	if (NChunkRelative::isPosChunkLocal(x,y,z))
+	{
+		voxel = data.get(x,y,z);
+		return true;
+	}
+	return false;
+}
+
 void Chunk::Debug()
 {
 	printf("ChunkDBUG: name: %d addr of flatarr: %x\n", dbugName, &data);

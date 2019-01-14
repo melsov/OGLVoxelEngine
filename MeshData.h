@@ -34,6 +34,16 @@ namespace ChunkMesh
 
 	struct MeshData
 	{
+		int lodTriOffsets[NUM_LODS];
+		int triCountAtLOD(int lodPow2)
+		{
+			// vertices are in low lod to high lod order
+			// but lodPow2 = 0 corresponds to max lod
+			int lodCount = NUM_LODS - lodPow2;
+			int r = 0;
+			for (int i = 0; i < lodCount; ++i) r += lodTriOffsets[i];
+			return r;
+		}
 		std::vector<VVertex> verts;
 		///std::vector<GLfloat> uvs;
 		std::vector<TRI_T> tris;

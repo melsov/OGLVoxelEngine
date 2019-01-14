@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <string>
 #include <Windows.h>
+#include <stdarg.h>
 
 using namespace glm;
 
@@ -127,8 +128,6 @@ namespace IDirections
 	static const ivec3 backi(0, 0, -1);
 	static const ivec3 forwardi(0, 0, 1);
 
-
-
 	enum FaceDirection
 	{
 		FD_DOWN, FD_UP, FD_LEFT, FD_RIGHT, FD_BACK, FD_FORWARD, FD_NUM_FACE_DIRECTIONS
@@ -159,6 +158,35 @@ namespace IDirections
 		case FD_BACK: return backi;
 		case FD_FORWARD: return forwardi;
 		default: return zeroi;
+		}
+	}
+
+	static bool IsNegativeDirection(int fd)
+	{
+		switch (fd)
+		{
+		case FD_DOWN:
+		case FD_LEFT:
+		case FD_BACK:
+			return true;
+		}
+		return false;
+	}
+
+	static ivec3 PerpDirForFaceDir(int fd, bool which)
+	{
+		switch (fd)
+		{
+		case FD_DOWN:
+		case FD_UP:
+			return which ? righti : forwardi;
+		case FD_LEFT:
+		case FD_RIGHT:
+			return which ? forwardi : upi;
+		case FD_BACK:
+		case FD_FORWARD:
+		default:
+			return which ? upi : righti;
 		}
 	}
 
@@ -230,6 +258,16 @@ struct veci3
 		return x >= 0 && y >= 0 && z >= 0;
 	}
 
+	int operator [] (int i) const
+	{
+		switch (i)
+		{
+		case 0: return x;
+		case 1: return y;
+		case 2: default: return z;
+		}
+	}
+
 	veci3 operator +(const veci3& a) const
 	{
 		return veci3(x + a.x, y + a.y, z + a.z);
@@ -264,12 +302,18 @@ struct veci3
 		z -= a.z;
 	}
 
+	// DISCLAIMER: gosh component-wise vector multiplication (credit Roberto C.)
 	veci3 operator *(const veci3& a) const
 	{
 		return veci3(x * a.x, y * a.y, z * a.z);
 	}
 
 	veci3 operator *(float f) const
+	{
+		return veci3(x * f, y * f, z * f);
+	}
+
+	veci3 operator *(int f) const
 	{
 		return veci3(x * f, y * f, z * f);
 	}
@@ -320,6 +364,11 @@ struct veci3
 		return area() - (*this - veci3(2)).area();
 	}
 
+	veci3 snapToLOD(int lod)
+	{
+		return veci3((x >> lod) << lod, (y >> lod) << lod, (z >> lod) << lod);
+	}
+
 	bool isOnShell(const veci3& v) const
 	{
 		return
@@ -347,6 +396,8 @@ struct veci3
 		return glm::ivec3(x, y, z);
 	}
 
+
+
 	// hash the easy way!
 	// assume a global limit chunk location XZ.
 	// the world is large but finite (sort of).
@@ -367,6 +418,19 @@ struct veci3
 
 };
 
+
+inline 
+ivec3 SnapToLOD(int lod, ivec3 v)
+{
+	return ivec3((v.x >> lod) << lod, (v.y >> lod) << lod, (v.z >> lod) << lod);
+}
+
+//ToString
+inline
+std::ostream& operator<<(std::ostream &stream, const veci3 v)
+{
+	return stream << "veci3 x: " << v.x << " y: " << v.y << " z: " << v.z << ".";
+}
 
 
 namespace NFlatIndex

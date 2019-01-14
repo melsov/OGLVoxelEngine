@@ -37,7 +37,9 @@ namespace Cube6
 
 		~RubiksChunk() {}
 
-		Chunk* get(ivec3 v) { return storage[IndexFor(v)]; }
+		Chunk* get(ivec3 v) {
+			//NOTE: we are getting a nonsense value here: (x = -53687092 ?)
+			return storage[IndexFor(v)]; }
 
 		Chunk* get(int x, int y, int z)
 		{

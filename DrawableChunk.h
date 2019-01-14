@@ -31,7 +31,7 @@ public:
 	void Debug();
 	void UnloadBuffers();
 	void LoadBuffers();
-	void Draw(glm::mat4 View, glm::mat4 Projection);
+	void Draw(glm::mat4 View, glm::mat4 Projection, int LOD = 0);
 
 	//BufferHandles GetBufferHandles() { return handles; }
 

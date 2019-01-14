@@ -27,7 +27,7 @@ using namespace glm;
 #include "ChunkSet.h"
 #include "ChunkBuilder.h"
 #include "ChunkBuildPool.h"
-#include <string>
+//#include <string.h>
 #include <memory>
 #include "VMap.h"
 #include <thread>
@@ -37,8 +37,9 @@ using namespace glm;
 #include "ChunkProximity.h"
 #include "CamData.h"
 #include "MortonChunk.h"
+#include "LODFaceCoords.h"
 
-using namespace glm;
+
 
 veci3 fakePlayerPos(HALF_CHUNK_SIZE);
 
@@ -70,9 +71,12 @@ void updateFakePlayerPos(int key)
 
 veci3 providePlayerPos() { return fakePlayerPos; }
 
+
+
 void TestSomething() 
 {
 	// test code here
+
 	
 
 	// end test code
@@ -208,11 +212,11 @@ Voxel CornerCubesWithConnectors(int x, int y, int z)
 
 Voxel TestGetVoxel(int x, int y, int z)
 {
-	return XZBars(x, y, z);
+	//return XZBars(x, y, z);
 	//return CornerCubes(x, y, z);
 	//return CornerCubesWithConnectors(x, y, z);
 	//return CenteredCubes(x, y, z);
-	//return UpsideDownQuarterPyramid(x, y, z);
+	return UpsideDownQuarterPyramid(x, y, z);
 }
 
 
@@ -339,8 +343,8 @@ int main(void)
 	// Create and compile our GLSL program from the shaders
 	GLuint programID;
 	if (!LoadShaders(
-		"shader/TransformVertexShader.vertexshader",
-		"shader/TextureFragmentShader.fragmentshader",
+		"shader/TransformVertexShader.glsl",
+		"shader/TextureFragmentShader.glsl",
 		programID))
 	{
 		while (1);
@@ -380,7 +384,8 @@ GLFW_KEY_M,
 GLFW_KEY_B,
 GLFW_KEY_C,
 GLFW_KEY_V,
-GLFW_KEY_Y, };
+GLFW_KEY_Y, 
+GLFW_KEY_L,};
 
 	keyDebouncer.Track(trackKeys, sizeof(trackKeys));
 
@@ -388,6 +393,7 @@ GLFW_KEY_Y, };
 	ChunkSet cset;
 
 	ChunkBuildPool builder(cset, &TestGetVoxel);
+	builder.DEBUGLODLEVEL = NUM_LODS - 1;
 	//TestBuildARegion(pool, mat, 3, ivec3(-1, 1, 0));
 	//pool.TestLoadDrawableBuffers();
 
@@ -434,9 +440,15 @@ GLFW_KEY_Y, };
 		else
 		{
 			updateFakePlayerPos(lastKey.keyCode);
+
 			proximity.CurateChunks();
 		}
 		
+		//TEST LODS
+		if (lastKey.keyCode == GLFW_KEY_L)
+		{
+			builder.DEBUGLODLEVEL = (builder.DEBUGLODLEVEL + 1) % NUM_LODS;
+		}
 
 		//
 		// primitive cpu time management system

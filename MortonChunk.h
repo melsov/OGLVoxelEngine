@@ -34,6 +34,11 @@ namespace MortonChunk
 		return !((a >> cubeLog2) == (b >> cubeLog2));
 	}
 
+	static bool IsSameMortonCube(const veci3& a, const veci3& b, int cubeLog2)
+	{
+		return (a >> cubeLog2) == (b >> cubeLog2);
+	}
+
 	struct MortonChunkCoords
 	{
 	private:

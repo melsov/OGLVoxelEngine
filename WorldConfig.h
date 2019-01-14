@@ -30,7 +30,7 @@
 
 #pragma region LOD
 
-#define NUM_LODS 1
+#define NUM_LODS 3
 
 #pragma endregion
 
@@ -96,6 +96,14 @@ namespace NChunkRelative
 			pos.x < CHUNK_SIZE && pos.x >= 0 &&
 			pos.y < CHUNK_SIZE && pos.y >= 0 &&
 			pos.z < CHUNK_SIZE && pos.z >= 0;
+	}
+
+	static bool isPosChunkLocal(int x, int y, int z)
+	{
+		return
+			x < CHUNK_SIZE && x >= 0 &&
+			y < CHUNK_SIZE && y >= 0 &&
+			z < CHUNK_SIZE && z >= 0;
 	}
 }
 

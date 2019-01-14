@@ -164,8 +164,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="shader\TextureFragmentShader.fragmentshader" />
-    <None Include="shader\TransformVertexShader.vertexshader" />
+    <None Include="shader\TextureFragmentShader.glsl" />
+    <None Include="shader\TransformVertexShader.glsl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="atomicops.h" />
@@ -193,6 +193,7 @@
     <ClInclude Include="Environment.h" />
     <ClInclude Include="FlatPow2Array3D.h" />
     <ClInclude Include="KeyboardDebouncer.h" />
+    <ClInclude Include="LODFaceCoords.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="MeshData.h" />
     <ClInclude Include="Mesher.h" />

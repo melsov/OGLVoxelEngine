@@ -114,6 +114,7 @@ public:
 	virtual void generateVoxels(VoxelAtFunc voxelAt);
 	virtual Voxel voxelAt(ivec3 pos);
 	virtual bool voxelAtSafe(ivec3 pos, Voxel& voxel);
+	virtual bool voxelAtSafe(int x, int y, int z, Voxel& voxel);
 	virtual bool isAVoidChunk() { return false; }
 
 	void Debug();
@@ -161,6 +162,12 @@ public:
 	Voxel voxelAt(ivec3 pos) { return { VEMPTY }; }
 
 	bool voxelAtSafe(ivec3 pos, Voxel& voxel)
+	{
+		voxel = { VEMPTY };
+		return true;
+	}
+
+	bool voxelAtSafe(int x, int y, int z, Voxel& voxel)
 	{
 		voxel = { VEMPTY };
 		return true;

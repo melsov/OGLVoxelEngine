@@ -18,6 +18,7 @@ public:
 	~Material();
 	void UseProgram();
 	void SetTransform(const glm::mat4& MVP);
+	void SetLODScale(float scale = 1);
 	void BindTexture();
 	//void Bind(GLuint vertexBufferHandle, GLuint uvBufferHandle, GLuint trisBufferHandle, int offset = 0);
 	void Bind(GLuint vvertBufferHandle, GLuint trisBufferHandle, int stride, int offset = 0);
@@ -30,6 +31,7 @@ private:
 	GLint matrixID;
 	GLint textureID;
 	GLuint texture;
+	GLuint scaleID;
 
 };
 

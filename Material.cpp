@@ -23,6 +23,7 @@ Material::Material(GLuint _programID, GLuint _texture)
 	texture = _texture; 
 	textureID = glGetUniformLocation(programID, "myTextureSampler");
 	matrixID = glGetUniformLocation(programID, "MVP");
+	scaleID = glGetUniformLocation(programID, "scale");
 }
 
 void Material::UseProgram()
@@ -33,6 +34,11 @@ void Material::UseProgram()
 void Material::SetTransform(const glm::mat4& MVP)
 {
 	glUniformMatrix4fv(matrixID, 1, GL_FALSE, &MVP[0][0]);
+}
+
+void Material::SetLODScale(float scale)
+{
+	glUniform1f(scaleID, scale);
 }
 
 void Material::BindTexture()
