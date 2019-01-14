@@ -84,11 +84,7 @@ void DrawableChunk::Draw(glm::mat4 View, glm::mat4 Projection, int LOD)
 	mat.BindTexture();
 	int lod = 0; //TODO
 
-	//mat.Bind(handles.verts, handles.uvs, handles.tris, 0);
 	mat.Bind(handles.verts, handles.tris, sizeof(ChunkMesh::VVertex), 0);
-
-	//GLsizei howMany = verts(lod)->size() / 3 / 4 * 6 * sizeof(ChunkMesh::VVertex);
-	//GLsizei howMany = md->tris.size();
 	GLsizei howMany = md->triCountAtLOD(LOD);
 
 	glDrawElements(

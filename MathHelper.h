@@ -128,6 +128,10 @@ namespace IDirections
 	static const ivec3 backi(0, 0, -1);
 	static const ivec3 forwardi(0, 0, 1);
 
+	static const ivec3 ThreePosDirs[3] = {
+		upi, righti, forwardi
+	};
+
 	enum FaceDirection
 	{
 		FD_DOWN, FD_UP, FD_LEFT, FD_RIGHT, FD_BACK, FD_FORWARD, FD_NUM_FACE_DIRECTIONS
@@ -189,6 +193,8 @@ namespace IDirections
 			return which ? upi : righti;
 		}
 	}
+
+	
 
 }
 
@@ -258,7 +264,7 @@ struct veci3
 		return x >= 0 && y >= 0 && z >= 0;
 	}
 
-	int operator [] (int i) const
+	int& operator [] (int i)
 	{
 		switch (i)
 		{
@@ -364,7 +370,7 @@ struct veci3
 		return area() - (*this - veci3(2)).area();
 	}
 
-	veci3 snapToLOD(int lod)
+	veci3 snapToLOD(int lod) const
 	{
 		return veci3((x >> lod) << lod, (y >> lod) << lod, (z >> lod) << lod);
 	}

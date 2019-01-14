@@ -17,6 +17,7 @@
 #include "readerwriterqueue.h"
 #include "BecomeActiveObject.h"
 #include "CamData.h"
+#include <thread>
 
 //
 // Generate and Mesh
@@ -48,19 +49,10 @@ typedef std::map<veci3, std::unique_ptr<DrawableChunk>> TMeshedMap;
 class ChunkBuildPool
 {
 public:
-	ChunkBuildPool(ChunkSet& _chunkSet, VoxelAtFunc _voxelAt) :
-		chunkSet(_chunkSet),
-		voxelAt(_voxelAt)
-	{
-		StartGenThread();
-	}
+	ChunkBuildPool(ChunkSet& _chunkSet, VoxelAtFunc _voxelAt);
 
-	~ChunkBuildPool() 
-	{
-		quittingTime = true;
-		if(genThread.joinable())
-			genThread.join();
-	}
+	~ChunkBuildPool();
+
 
 #pragma region push-chunks
 
@@ -71,7 +63,9 @@ public:
 
 	void Generate(int maxGenerateCount);
 
-	void Mesh(int maxChunksToMesh, Material mat, GLuint chunkTriBufferHandle);
+
+	void PushToMeshThread(int maxChunksToMesh);
+	void CollectFromMeshThread(int maxChunksToMesh, Material mat, GLuint chunkTriBufferHandle);
 	
 #pragma endregion
 
@@ -79,6 +73,7 @@ public:
 	{
 		printf("meshed has: %d\n", meshed.size());
 	}
+
 
 	int DEBUGLODLEVEL;
 
@@ -95,7 +90,6 @@ public:
 #pragma endregion
 
 	// should we be uneasy about this one?
-	//std::map<veci3, std::unique_ptr<DrawableChunk>>* getMeshedMap()
 	TMeshedMap* getMeshedMap()
 	{
 		return &meshed;
@@ -118,17 +112,21 @@ private:
 	void StartGenThread();
 	void GenerateAt(veci3 cpos);
 
+	void StartMeshThread();
+
 	void Preserve27(veci3 cpos, bool incr);
 
 	moodycamel::BlockingReaderWriterQueue<veci3> toGenThreadQ;
 	moodycamel::ReaderWriterQueue< ChunkBuilder *> fromGenThreadQ;
+
+	moodycamel::BlockingReaderWriterQueue< ChunkBuilder*> toMeshThreadQ;
+	moodycamel::ReaderWriterQueue< ChunkBuilder*> fromMeshThreadQ;
 	
 	std::queue<veci3> shouldGenerate;
 	std::unordered_set<veci3> willGenerate;
 	std::unordered_map<veci3, int> preserve;
 
 	TMeshedMap meshed;
-	//std::map<veci3, std::unique_ptr<LODDrawableChunkSet>> meshed; // DrawableChunk >> meshed;
 
 	VEActiveObject::BecomeActiveObject active;
 
@@ -137,6 +135,9 @@ private:
 
 	std::thread genThread;
 	bool isRunnningGenThread;
+
+	std::thread meshThread;
+	bool isRunningMeshThread;
 
 	bool quittingTime;
 };

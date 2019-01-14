@@ -11,6 +11,8 @@
 
 #define IV_CHUNK_SIZE (ivec3(CHUNK_SIZE,CHUNK_SIZE,CHUNK_SIZE))
 
+#define VEC3_CHUNK_SIZE (vec3(CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE))
+
 // worst case chunk: 3d 'checker board'
 // for CHUNK_SIZE = 16
 // a pair of rows has 8 + 7 voxels

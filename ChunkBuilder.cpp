@@ -17,8 +17,10 @@ void ChunkBuilder::Generate(VoxelAtFunc voxelAt, ChunkSet& cset)
 	auto centerPos = rubiks.center()->chunkPosition();
 	Chunk *subject;
 	ivec3 dir;
-	for (int i = IDirections::FD_DOWN; i < IDirections::FD_NUM_FACE_DIRECTIONS; ++i)
+	//for (int i = IDirections::FD_DOWN; i < IDirections::FD_NUM_FACE_DIRECTIONS; ++i)
+	for(int i = 0; i < 27; ++i)
 	{
+
 		dir = IDirections::DirForFaceDir(i);
 		subject = cset.GetOrCreate(centerPos + dir);
 
@@ -33,7 +35,7 @@ void ChunkBuilder::Generate(VoxelAtFunc voxelAt, ChunkSet& cset)
 	}
 }
 
-void ChunkBuilder::Mesh(ChunkMesh::MeshData& md)
+void ChunkBuilder::Mesh()
 {
 	if (!rubiks.center()->getIsDirty())
 	{
@@ -47,7 +49,8 @@ void ChunkBuilder::Mesh(ChunkMesh::MeshData& md)
 
 	rubiks.center()->setDirty(false);
 
-	ChunkMesh::CreateMeshM(rubiks, md);
+	ChunkMesh::MeshData& md = rubiks.center()->meshData;
+	ChunkMesh::CreateMeshM(rubiks,  md);
 
 	md.debug();
 }

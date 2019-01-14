@@ -8,12 +8,39 @@ namespace ChunkMesh
 
 
 
+	float GetShadow(int FaceDir, veci3 corner, veci3 relPos, Cube6::RubiksChunk rubiks)
+	{
+		// shadow ignores lod (far away won't matter)
+		auto dir = IDirections::DirForFaceDir(FaceDir);
+
+		Voxel vox;
+		veci3 cursor, look;
+		for (int i = 0; i < 3; ++i)
+		{
+			if (dir[i] == 1) { continue; }
+			cursor = veci3(0, 0, 0);
+			cursor[i] = 1;
+			
+			look = relPos + dir + (cursor * corner);
+
+			if (rubiks.voxelAtSafe(look.toGLMIVec3(), vox))
+			{
+				if (vox.type != VEMPTY)
+				{
+					return .2f;
+				}
+			}
+		}
+		return 1.0f;
+	}
+
 	void AddVFace_(
 		int FaceDir,
 		unsigned char voxType,
 		veci3 relPos,
 		unsigned short relIndex,
 		//MeshData & meshData, 
+		Cube6::RubiksChunk& rubiks,
 		VFace& vface,
 		float scale)
 	{
@@ -36,19 +63,23 @@ namespace ChunkMesh
 
 		auto offset = TileOffsetForVoxType(voxType, FaceDir);
 		int i, j;
+		veci3 v;
 		for (i = 0; i < 4; ++i)
 		{
 			VVertex vvert;
+			v = veci3(verts[i * 3], verts[i * 3 + 1], verts[i * 3 + 2]);
 			for (j = 0; j < 3; ++j)
 			{
-				//vvert.pos[j] = verts[i * 3 + j] / 2.0f * scale + relPos[j];
+				// put pos coords at .9
+				// helps with LOD scaling
 				vvert.pos[j] = (verts[i * 3 + j] < 0 ? 0.0f : .9f) * scale + relPos[j];
 			}
 			for (j = 0; j < 2; ++j)
 			{
 				vvert.uvs[j] = (j == 1 ? offset.y : offset.x) + uvFace[i * 2 + j];
 			}
-			GLfloat color[] = { 1, .7, .6, 1 };
+			GLfloat shadow = GetShadow(FaceDir, v, relPos, rubiks);
+			GLfloat color[] = { 1 * shadow, .7 * shadow, .6 * shadow, 1 };
 			for (j = 0; j < 4; ++j)
 			{
 				vvert.color[j] = color[j];
@@ -69,6 +100,7 @@ namespace ChunkMesh
 		unsigned char voxType,
 		veci3 relPos,
 		unsigned short relIndex,
+		Cube6::RubiksChunk& rubiks,
 		MeshData& meshData,
 		float scale = 1.0f)
 	{
@@ -78,6 +110,7 @@ namespace ChunkMesh
 			voxType,
 			relPos,
 			relIndex,
+			rubiks,
 			vface,
 			scale);
 
@@ -188,7 +221,7 @@ namespace ChunkMesh
 
 					if (shouldAdd)
 					{
-						AddFaceM_(face, vox.type, relPos, relIndex, mds[mortonLevel]);
+						AddFaceM_(face, vox.type, relPos, relIndex, rubiks, mds[mortonLevel]);
 						relIndex += 4;
 						break;
 					}

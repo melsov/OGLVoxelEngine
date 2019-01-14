@@ -19,6 +19,7 @@ glm::mat4 getViewMatrix()
 {
 	return ViewMatrix;
 }
+
 glm::mat4 getProjectionMatrix()
 {
 	return ProjectionMatrix;

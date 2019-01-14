@@ -7,6 +7,22 @@
 
 #pragma region push-chunks
 
+ChunkBuildPool::ChunkBuildPool(ChunkSet& _chunkSet, VoxelAtFunc _voxelAt) :
+	chunkSet(_chunkSet),
+	voxelAt(_voxelAt)
+{
+	StartGenThread();
+	StartMeshThread();
+}
+
+ChunkBuildPool::~ChunkBuildPool()
+{
+	quittingTime = true;
+	if (genThread.joinable())
+		genThread.join();
+	if (meshThread.joinable())
+		meshThread.join();
+}
 
 // TODO: plan, chunk build pool builds in columns
 // 
@@ -59,7 +75,7 @@ void ChunkBuildPool::StartGenThread()
 	if (isRunnningGenThread) { return; }
 	isRunnningGenThread = true;
 
-	// [&]  means capture vars in scope by reference
+	// TIL: [&] means capture vars in scope by reference
 	// needed to capture 'this'
 	genThread = std::thread([&]()
 	{
@@ -89,50 +105,66 @@ void ChunkBuildPool::GenerateAt(veci3 cpos)
 #pragma endregion
 
 
+void ChunkBuildPool::StartMeshThread()
+{
+	if (isRunningMeshThread) return;
+	isRunningMeshThread = true;
 
-//
-// pull positions from fromGenThhreadQ
-// until empty or we've hit maxChunksToMesh
-//
-void ChunkBuildPool::Mesh(int maxChunksToMesh, Material mat, GLuint chunkTriBufferHandle)
+	meshThread = std::thread([&]()
+	{
+		ChunkBuilder *builder;
+		while (!quittingTime)
+		{
+			if (!toMeshThreadQ.wait_dequeue_timed(builder, std::chrono::milliseconds(200)))
+			{
+				continue;
+			}
+
+			builder->Mesh();
+
+			fromMeshThreadQ.enqueue(builder);
+		}
+	});
+}
+
+
+void ChunkBuildPool::PushToMeshThread(int maxChunksToMesh)
 {
 	ChunkBuilder* builder;
 	while (fromGenThreadQ.try_dequeue(builder))
 	{
 
-		auto cpos = veci3(builder->GetCenterChunkPos());
-
-		if (meshed.find(cpos) != meshed.end()) 
+		if (meshed.find(veci3(builder->GetCenterChunkPos())) != meshed.end())
 		{
-			printf("already meshed at: "); DebugVec3(cpos.toGLMIVec3());
-			continue; 
+			printf("already meshed at: "); DebugVec3(builder->GetCenterChunkPos());
+			continue;
 		} // or is the chunk dirty?
 
+		toMeshThreadQ.enqueue(builder);
+
+		if (--maxChunksToMesh <= 0) { break; }
+	}
+
+}
+
+//
+// collect a builder from the fromMeshQ
+// create a drawable from the builder's chunk
+// update Preserve27 (which chunks can be deleted).
+//
+void ChunkBuildPool::CollectFromMeshThread(int maxChunksToMesh, Material mat, GLuint chunkTriBufferHandle)
+{
+	ChunkBuilder* builder;
+	while (fromMeshThreadQ.try_dequeue(builder))
+	{
+
+		auto cpos = veci3(builder->GetCenterChunkPos());
+
 		auto chunk = chunkSet.Get(builder->GetCenterChunkPos());
-		
-		builder->Mesh(chunk->meshData); 
-
-		//
-		// Troubles?
-		//
-		//LODDrawableChunkSet* lodSet = new LODDrawableChunkSet();
-		//for (int i = 0; i < NUM_LODS; ++i)
-		//{
-		//	lodSet->set[i] = new DrawableChunk(chunk->getModelMatrix(), mat, chunkTriBufferHandle);
-		//	lodSet->set[i]->md = chunk->getMeshData(i);
-		//	lodSet->set[i]->LoadBuffers();
-
-		//	//DrawableChunk* drawable = new DrawableChunk(chunk->getModelMatrix(), mat, chunkTriBufferHandle);
-		//	//drawable->md = chunk->getMeshData();
-		//	//drawable->LoadBuffers();
-		//}
-		//meshed.insert(std::make_pair(cpos, lodSet)); // drawable));
-
-
 		DrawableChunk* drawable = new DrawableChunk(
-			chunk->getModelMatrix(), 
-			mat, 
-			chunkTriBufferHandle); 
+			chunk->getModelMatrix(),
+			mat,
+			chunkTriBufferHandle);
 		drawable->md = &chunk->meshData; // &chunk->meshSet;
 		drawable->LoadBuffers();
 		meshed.insert(std::make_pair(cpos, drawable));
@@ -141,11 +173,50 @@ void ChunkBuildPool::Mesh(int maxChunksToMesh, Material mat, GLuint chunkTriBuff
 
 		delete builder;
 
-		if (--maxChunksToMesh <= 0) { 
-			break; 
-		}
+		if (--maxChunksToMesh <= 0) { break; }
 	}
 }
+
+//
+// SYNCHRONOUS VERSION
+// pull positions from fromGenThhreadQ
+// until empty or we've hit maxChunksToMesh
+//
+//void ChunkBuildPool::Mesh(int maxChunksToMesh, Material mat, GLuint chunkTriBufferHandle)
+//{
+//	ChunkBuilder* builder;
+//	while (fromGenThreadQ.try_dequeue(builder))
+//	{
+//
+//		auto cpos = veci3(builder->GetCenterChunkPos());
+//
+//		if (meshed.find(cpos) != meshed.end()) 
+//		{
+//			printf("already meshed at: "); DebugVec3(cpos.toGLMIVec3());
+//			continue; 
+//		} // or is the chunk dirty?
+//
+//		auto chunk = chunkSet.Get(builder->GetCenterChunkPos());
+//		
+//		builder->Mesh(chunk->meshData); 
+//
+//		DrawableChunk* drawable = new DrawableChunk(
+//			chunk->getModelMatrix(), 
+//			mat, 
+//			chunkTriBufferHandle); 
+//		drawable->md = &chunk->meshData; // &chunk->meshSet;
+//		drawable->LoadBuffers();
+//		meshed.insert(std::make_pair(cpos, drawable));
+//
+//		Preserve27(cpos, false);
+//
+//		delete builder;
+//
+//		if (--maxChunksToMesh <= 0) { 
+//			break; 
+//		}
+//	}
+//}
 
 // TODO: mechanism for re-meshing
 // must erase from willGenerate
@@ -231,7 +302,9 @@ void ChunkBuildPool::TestUnloadDrawableBuffers()
 	}
 }
 
-void ChunkBuildPool::TestDrawDrawables(const VECam::CamData& cam) 
+//TODO: chunk drawing class
+// relieve build pool of unrelated functionality
+void ChunkBuildPool::TestDrawDrawables(const VECam::CamData& cam)
 {
 	auto View = cam.getViewMatrix();
 	auto Proj = cam.getProjectionMatrix();
@@ -256,9 +329,21 @@ void ChunkBuildPool::TestDrawDrawables(const VECam::CamData& cam)
 			}
 		}
 
+
 		if (inFrustum)
 		{
-			int lod = DEBUGLODLEVEL >= 0 ? DEBUGLODLEVEL : 0; 
+			// find lod with distance from cam
+			auto dist = chunk->centerV3() - cam.getPosition();
+			int lod = NUM_LODS - 1; // DEBUGLODLEVEL >= 0 ? DEBUGLODLEVEL : 0;
+			float d = glm::length(dist);
+			if (d < CHUNK_SIZE * 1.5)
+			{
+				lod = 0;
+			}
+			/*else if (d > CHUNK_SIZE)
+			{
+				lod = max(NUM_LODS - 2, 0);
+			}*/
 			// TODO: choose lod func. based on cpos cam pos;
 			// it->second.get()->set[lod]->Draw(View, Proj);
 			it->second.get()->Draw(View, Proj, lod);
@@ -267,6 +352,8 @@ void ChunkBuildPool::TestDrawDrawables(const VECam::CamData& cam)
 	}
 
 }
+
+
 
 
 #pragma endregion

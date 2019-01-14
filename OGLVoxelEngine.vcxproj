@@ -152,6 +152,7 @@
     <ClCompile Include="common\vboindexer.cpp" />
     <ClCompile Include="Drawable.cpp" />
     <ClCompile Include="DrawableChunk.cpp" />
+    <ClCompile Include="DrawChunks.cpp" />
     <ClCompile Include="Environment.cpp" />
     <ClCompile Include="FlatPow2Array3D.cpp" />
     <ClCompile Include="KeyboardDebouncer.cpp" />
@@ -161,6 +162,7 @@
     <ClCompile Include="MeshData.cpp" />
     <ClCompile Include="Mesher.cpp" />
     <ClCompile Include="ProximityList.cpp" />
+    <ClCompile Include="ReadOnlyMap.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -190,6 +192,7 @@
     <ClInclude Include="Cube6.h" />
     <ClInclude Include="Drawable.h" />
     <ClInclude Include="DrawableChunk.h" />
+    <ClInclude Include="DrawChunks.h" />
     <ClInclude Include="Environment.h" />
     <ClInclude Include="FlatPow2Array3D.h" />
     <ClInclude Include="KeyboardDebouncer.h" />
@@ -200,6 +203,7 @@
     <ClInclude Include="MortonChunk.h" />
     <ClInclude Include="ProximityList.h" />
     <ClInclude Include="readerwriterqueue.h" />
+    <ClInclude Include="ReadOnlyMap.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="RubiksChunk.h" />
     <ClInclude Include="RubiksContainer.h" />

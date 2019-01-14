@@ -20,8 +20,7 @@ public:
 
 	void Generate(VoxelAtFunc voxelAt, ChunkSet& cset);
 
-	void Mesh(ChunkMesh::MeshData& md);
-	//void Mesh(ChunkMesh::LODMeshDataSet& set);
+	void Mesh();
 
 	ivec3 GetCenterChunkPos() { return centerChunkPos; }
 

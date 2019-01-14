@@ -86,29 +86,24 @@ public:
 
 	ChunkMesh::MeshData meshData;
 
-	ChunkMesh::MeshData* getMeshData(int lod = 0)
+	ChunkMesh::MeshData* getMeshData(int lod = 0) 
 	{
 		return &meshData;
-		//return &meshSet.mds[lod]; // &meshData;
 	}
-	//ChunkMesh::MeshData& meshData(int lod)
-	//{
-	//	return meshSet.mds[lod];
-	//}
 
-	//ChunkMesh::LODMeshDataSet meshSet;
-	//ChunkMesh::MeshData meshData;
+	//Positions in global coords
+	ivec3 position() const { return pos; }
+	vec3 positionV3() const { return vec3(pos.x, pos.y, pos.z); }
+	vec3 centerV3() const { return positionV3() + VEC3_CHUNK_SIZE / 2.0f; }
 
-	ivec3 position() { return pos; }
-	vec3 positionV3() { return vec3(pos.x, pos.y, pos.z); }
 	mat4 getModelMatrix()
 	{
 		return glm::translate(mat4(1.0f), positionV3());
 	}
 	ivec3 chunkPosition() { return chunkPos; }
 
-	virtual bool getIsEmpty() { return empty; }
-	virtual bool getIsDirty() { return dirty; }
+	virtual bool getIsEmpty() const { return empty; }
+	virtual bool getIsDirty() const { return dirty; }
 	void setDirty(bool _dirty) { dirty = _dirty; }
 
 	virtual void generateVoxels(VoxelAtFunc voxelAt);

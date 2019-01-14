@@ -38,7 +38,7 @@ using namespace glm;
 #include "CamData.h"
 #include "MortonChunk.h"
 #include "LODFaceCoords.h"
-
+#include "DrawChunks.h"
 
 
 veci3 fakePlayerPos(HALF_CHUNK_SIZE);
@@ -393,9 +393,9 @@ GLFW_KEY_L,};
 	ChunkSet cset;
 
 	ChunkBuildPool builder(cset, &TestGetVoxel);
-	builder.DEBUGLODLEVEL = NUM_LODS - 1;
-	//TestBuildARegion(pool, mat, 3, ivec3(-1, 1, 0));
-	//pool.TestLoadDrawableBuffers();
+
+	DrawChunks drawChunks(builder.getMeshedMap(), cset);
+	drawChunks.SetLOD(CHUNK_SIZE * 2.5, .3);
 
 	VEChunkMgmt::ChunkProximity proximity(builder, &providePlayerPos);
 
@@ -454,7 +454,9 @@ GLFW_KEY_L,};
 		// primitive cpu time management system
 		//
 		builder.Generate(1);
-		builder.Mesh(1, mat, ChunkMesh::chunkTriBufferHandle);
+		builder.PushToMeshThread(1);
+		//builder.Mesh(1, mat, ChunkMesh::chunkTriBufferHandle);
+		builder.CollectFromMeshThread(1, mat, ChunkMesh::chunkTriBufferHandle);
 
 
 		//
@@ -465,7 +467,8 @@ GLFW_KEY_L,};
 
 		cam.ComputeMatricesFromInputs();
 
-		builder.TestDrawDrawables(cam);
+		//builder.TestDrawDrawables(cam);
+		drawChunks.Draw(cam);
 
 
 		// Swap buffers

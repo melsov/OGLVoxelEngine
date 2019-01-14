@@ -117,6 +117,12 @@
     <ClCompile Include="Mesher.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ReadOnlyMap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DrawChunks.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -241,6 +247,12 @@
     </ClInclude>
     <ClInclude Include="LODFaceCoords.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ReadOnlyMap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DrawChunks.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
