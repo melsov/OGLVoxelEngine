@@ -5,7 +5,7 @@
 #include "Chunk.h"
 #include "MathHelper.h"
 #include "WorldConfig.h"
-
+#include <iostream>
 
 namespace Cube6
 {
@@ -106,6 +106,7 @@ namespace Cube6
 				voxel = chunk->voxelAt(rel);
 				return true;
 			}
+			
 			return false;
 		}
 

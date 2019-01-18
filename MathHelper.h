@@ -55,6 +55,16 @@ static ivec3 inline NegToZeroPosToOne(const ivec3& v)
 	return r;
 }
 
+static int inline NegToOnePosToTwoZero(int i)
+{
+	return i < 0 ? 1 : (i > 0 ? 2 : 0);
+}
+
+static int inline ZeroToZeroElseOne(int i)
+{
+	return i == 0 ? 0 : 1;
+}
+
 static int inline ZeroToOneElseZero(int i)
 {
 	return (i == 0 ? 1 : 0);
@@ -137,13 +147,18 @@ namespace IDirections
 		FD_DOWN, FD_UP, FD_LEFT, FD_RIGHT, FD_BACK, FD_FORWARD, FD_NUM_FACE_DIRECTIONS
 	};
 
+	static const char* FaceDirNames[6] = {
+		"down", "up", "left", "right", "back", "forward"
+	};
 
 	static int FaceDirectionFor(int x, int y, int z)
 	{
-		x = NegToZeroPosToOne(x);
-		y = NegToZeroPosToOne(y);
-		z = NegToZeroPosToOne(z);
-		return y + (x << 1) + (z << 2);
+		if (y < 0) return FD_DOWN;
+		if (y > 0) return FD_UP;
+		if (x < 0) return FD_LEFT;
+		if (x > 0) return FD_RIGHT;
+		if (z < 0) return FD_BACK;
+		return FD_FORWARD;
 	}
 
 	static int FaceDirectionFor(ivec3 v)
@@ -308,7 +323,7 @@ struct veci3
 		z -= a.z;
 	}
 
-	// DISCLAIMER: gosh component-wise vector multiplication (credit Roberto C.)
+	// gosh component-wise vector multiplication
 	veci3 operator *(const veci3& a) const
 	{
 		return veci3(x * a.x, y * a.y, z * a.z);
@@ -438,6 +453,11 @@ std::ostream& operator<<(std::ostream &stream, const veci3 v)
 	return stream << "veci3 x: " << v.x << " y: " << v.y << " z: " << v.z << ".";
 }
 
+inline
+std::ostream& operator<<(std::ostream &stream, const vec3 v)
+{
+	return stream << "veci3 x: " << v.x << " y: " << v.y << " z: " << v.z << ".";
+}
 
 namespace NFlatIndex
 {

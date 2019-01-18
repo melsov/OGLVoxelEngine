@@ -15,6 +15,8 @@
 namespace ChunkMesh
 {
 
+	float GetShadowTest(int FaceDir, veci3 corner, veci3 relPos);
+
 	void CreateMeshM(Cube6::RubiksChunk& rubiks, MeshData& md);
 
 	void AddFaceM(

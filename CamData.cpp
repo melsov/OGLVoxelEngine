@@ -89,6 +89,8 @@ namespace VECam
 		lastTime = currentTime;
 	}
 
+	//TODO: new func Cube intersects frustum
+	// in some cases no chunk corner is in frustum but a middle section is?
 	bool CamData::IsPointInFrustum(glm::vec3 v) const
 	{
 		auto dif = v - position;

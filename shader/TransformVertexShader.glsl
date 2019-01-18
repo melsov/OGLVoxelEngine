@@ -22,7 +22,6 @@ void main()
 
 	//LOD adjust pos
 	vec3 m = mod(pos, 1);
-	// vec3 s = step(m, vec3(.1));
 	pos = pos - mod(pos, scale) + floor(m + .49) * scale;
 
 	// Output position of the vertex, in clip space : MVP * position

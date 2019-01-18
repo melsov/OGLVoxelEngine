@@ -39,6 +39,7 @@ using namespace glm;
 #include "MortonChunk.h"
 #include "LODFaceCoords.h"
 #include "DrawChunks.h"
+#include "Mesher.h"
 
 
 veci3 fakePlayerPos(HALF_CHUNK_SIZE);
@@ -73,16 +74,6 @@ veci3 providePlayerPos() { return fakePlayerPos; }
 
 
 
-void TestSomething() 
-{
-	// test code here
-
-	
-
-	// end test code
-
-	//while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0); 
-}
 
 Voxel UpsideDownQuarterPyramid(int x, int y, int z)
 {
@@ -137,7 +128,7 @@ Voxel CornerCubes(int x, int y, int z)
 
 
 
-	int rad = 8;
+	int rad = 3;
 	if (x >= rad || y >= rad || z >= rad)
 	{
 		result.type = VEMPTY;
@@ -207,8 +198,59 @@ Voxel CornerCubesWithConnectors(int x, int y, int z)
 	return result;
 }
 
+Voxel SmoothLightTestCubes(int x, int y, int z)
+{
+	Voxel result;
+	x = NegToPosMod(x, CHUNK_SIZE);
+	y = NegToPosMod(y, CHUNK_SIZE);
+	z = NegToPosMod(z, CHUNK_SIZE);
 
 
+
+	int rad = 2;
+	if (x >= rad || y >= rad || z >= rad)
+	{
+		result.type = VEMPTY;
+	}
+	else
+	{
+		if (x == rad - 1 && y == rad - 1 && z == rad - 1)
+			result.type = VEMPTY;
+		else 
+			result.type = VGRASS;
+	}
+	return result;
+	
+}
+
+void TestSomething()
+{
+	// test code here
+
+	
+
+	for (int fd = 0; fd < IDirections::FD_NUM_FACE_DIRECTIONS; ++fd)
+	{
+		auto corners = ChunkMesh::CornersInDirection(fd);
+		cout << IDirections::FaceDirNames[fd] << endl;
+
+		for (int i = 0; i < 4; ++i)
+		{
+			veci3 corner;
+			for (int j = 0; j < 3; ++j)
+			{
+				corner[j] = corners[i * 3 + j];
+			}
+			veci3 relPos(2,2,2);
+			ChunkMesh::GetShadowTest(fd, corner, relPos);
+			cout << endl;
+		}
+
+	}
+	// end test code
+
+	// while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0); 
+}
 
 Voxel TestGetVoxel(int x, int y, int z)
 {
@@ -217,6 +259,7 @@ Voxel TestGetVoxel(int x, int y, int z)
 	//return CornerCubesWithConnectors(x, y, z);
 	//return CenteredCubes(x, y, z);
 	return UpsideDownQuarterPyramid(x, y, z);
+	//return SmoothLightTestCubes(x, y, z);
 }
 
 
@@ -354,7 +397,7 @@ int main(void)
 	GLuint MatrixID = glGetUniformLocation(programID, "MVP");
 
 	
-	GLuint Texture = loadDDS("shader/uvtemplate.DDS");
+	GLuint Texture = loadDDS("shader/weird2.dds");
 
 	// Get a handle for our "myTextureSampler" uniform
 	GLuint TextureID = glGetUniformLocation(programID, "myTextureSampler");
@@ -369,8 +412,10 @@ int main(void)
 	Material mat(programID, texture);
 
 	//static tri indices
+#ifdef STATIC_TRI_INDICES
 	ChunkMesh::InitChunkTriIndices();
 	ChunkMesh::LoadChunkTriIndices();
+#endif
 
 	VEInput::KeyboardDebouncer keyDebouncer(window);
 

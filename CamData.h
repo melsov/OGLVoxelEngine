@@ -74,7 +74,7 @@ namespace VECam
 	{
 		cam.frustum.fov = glm::radians(45.0f);
 		cam.frustum.aspect = 4.0f / 3.0f;
-		cam.frustum._near = 0.1f;
+		cam.frustum._near = 0.01f;
 		cam.frustum._far = 100.0f;
 	}
 }

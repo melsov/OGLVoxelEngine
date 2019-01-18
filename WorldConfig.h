@@ -36,13 +36,15 @@
 
 #pragma endregion
 
+
+#define STATIC_TRI_INDICES 
 //
 // World data
 //
 #define HIGHEST_CHUNK_Y 8
 #define LOWEST_CHUNK_Y 0
 
-#define GENERATE_DIM 3
+#define GENERATE_DIM 2
 #define IV_GENERATE_BOX (veci3(GENERATE_DIM))
 
 #define UNLOAD_CHUNK_BORDER_WIDTH 2

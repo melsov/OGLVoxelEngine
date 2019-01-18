@@ -16,11 +16,10 @@ public:
 		ModelMatrix(_ModelMatrix),
 		mat(_mat)
 	{
+#ifdef STATIC_TRI_INDICES
 		handles.tris = _trisBufferHandle;
-		/*for (int i = 0; i < NUM_LODS; ++i)
-		{
-			md->mds[i].handles.tris = _trisBufferHandle;
-		}*/
+#endif // STATIC_TRI_INDICES
+
 	}
 
 	~DrawableChunk() 

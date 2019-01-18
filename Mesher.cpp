@@ -2,36 +2,100 @@
 #include "MortonChunk.h"
 #include "LODFaceCoords.h"
 #include <assert.h>
+#include <iostream>
 
 namespace ChunkMesh
 {
 
+	namespace dcolor
+	{
+		static const vec3 dirColors[6] = {
+			vec3(.5, 0, 0),
+			vec3(.25, .5, 0),
+			vec3(0, .5, 0),
+			vec3(0, .5, .25),
+			vec3(0, 0, .5),
+			vec3(.25, .0, .5),
+		};
+	}
 
 
-	float GetShadow(int FaceDir, veci3 corner, veci3 relPos, Cube6::RubiksChunk rubiks)
+	float GetShadowTest(int FaceDir, veci3 corner, veci3 relPos)
 	{
 		// shadow ignores lod (far away won't matter)
 		auto dir = IDirections::DirForFaceDir(FaceDir);
 
 		Voxel vox;
 		veci3 cursor, look;
+		std::cout << "corner: " << corner << std::endl;
 		for (int i = 0; i < 3; ++i)
 		{
-			if (dir[i] == 1) { continue; }
+			if (dir[i] != 0) { continue; }
+			cursor = veci3(0, 0, 0);
+			cursor[i] = 1;
+
+			auto turn = cursor * corner;
+			std::cout << "turn: " << turn << std::endl;
+			int k = IDirections::FaceDirectionFor(turn);
+			vec3 c = dcolor::dirColors[k];
+			std::cout << "color : " << k << " : " << c << std::endl;
+			look = relPos + dir + (cursor * corner);
+			std::cout << look << std::endl;
+
+			
+
+		}
+		return 1.0f;
+	}
+
+	//credit: https://0fps.net/2013/07/03/ambient-occlusion-for-minecraft-like-worlds/
+	float GetAOLight(int FaceDir, veci3 corner, veci3 relPos, Cube6::RubiksChunk rubiks)
+	{
+		// shadow ignores lod (far away won't matter)
+		auto dir = IDirections::DirForFaceDir(FaceDir);
+
+		Voxel vox;
+		veci3 cursor, look;
+
+		float sides[2] = { 0,0 };
+		int index = 0;
+
+		for (int i = 0; i < 3; ++i)
+		{
+			if (dir[i] != 0) { continue; }
 			cursor = veci3(0, 0, 0);
 			cursor[i] = 1;
 			
-			look = relPos + dir + (cursor * corner);
-
+			//auto turn = ;
+			look = relPos + dir + cursor * corner;
+			
 			if (rubiks.voxelAtSafe(look.toGLMIVec3(), vox))
 			{
 				if (vox.type != VEMPTY)
 				{
-					return .2f;
+					sides[index++] = 1;
 				}
 			}
 		}
-		return 1.0f;
+
+		if (sides[0] + sides[1] > 1.1)
+		{
+			return 0.0f;
+		}
+
+		float rCorner = 0;
+		if (rubiks.voxelAtSafe(relPos + corner, vox))
+		{
+			if (vox.type != VEMPTY)
+			{
+				rCorner = 1;
+			}
+		}
+
+		float lvl = (3 - (sides[0] + sides[1] + rCorner)) / 3.0f;
+
+		return lvl;
+		//return shColor;
 	}
 
 	void AddVFace_(
@@ -57,13 +121,23 @@ namespace ChunkMesh
 			break;
 		}
 
-		//TODO:
-		// foreach vert look up the two cross voxels
-		// that might make a corner shadow
-
-		auto offset = TileOffsetForVoxType(voxType, FaceDir);
 		int i, j;
 		veci3 v;
+		float aoLight[4];
+
+		//Ambient occlusion light for the four face verts
+		for (i = 0; i < 4; ++i)
+		{
+			v = veci3(verts[i * 3], verts[i * 3 + 1], verts[i * 3 + 2]);
+			aoLight[i] = GetAOLight(FaceDir, v, relPos, rubiks);
+		}
+
+		// flip verts to create symmetry in AO shadows?
+		// does this work with our face vert patterns??
+		bool flipVerts = !(aoLight[0] + aoLight[2] > aoLight[1] + aoLight[3]);
+
+		//auto offset = TileOffsetForVoxType(voxType, FaceDir);
+		auto offset = TileOffsetForDir(FaceDir);
 		for (i = 0; i < 4; ++i)
 		{
 			VVertex vvert;
@@ -78,8 +152,9 @@ namespace ChunkMesh
 			{
 				vvert.uvs[j] = (j == 1 ? offset.y : offset.x) + uvFace[i * 2 + j];
 			}
-			GLfloat shadow = GetShadow(FaceDir, v, relPos, rubiks);
-			GLfloat color[] = { 1 * shadow, .7 * shadow, .6 * shadow, 1 };
+
+			auto shadow = aoLight[i]; // GetAOLight(FaceDir, v, relPos, rubiks);
+			GLfloat color[] = { shadow, shadow, shadow * flipVerts, 1 };
 			for (j = 0; j < 4; ++j)
 			{
 				vvert.color[j] = color[j];
@@ -90,8 +165,7 @@ namespace ChunkMesh
 
 		for (int i = 0; i < 6; ++i)
 		{
-			vface.tris[i] = triFace[i] + relIndex;
-			//meshData.tris.push_back(triFace[i] + relIndex);
+			vface.tris[i] = (flipVerts ? triFaceFlipped[i] : triFace[i]) + relIndex;
 		}
 	}
 

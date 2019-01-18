@@ -33,6 +33,9 @@ namespace ChunkMesh
 		FACE_DOWN, FACE_UP, FACE_LEFT, FACE_RIGHT, FACE_BACK, FACE_FORWARD
 	};
 
+	
+
+
 	static const glm::ivec3 FaceDirections[6] = {
 		glm::ivec3(0, -1, 0),
 		glm::ivec3(0, 1, 0),
@@ -42,6 +45,7 @@ namespace ChunkMesh
 		glm::ivec3(0, 0, 1)
 	};
 
+	//CCW z up
 	static const GLfloat down[12] = {
 		-1, -1, -1, //0
 		 1, -1, -1, //1
@@ -49,6 +53,7 @@ namespace ChunkMesh
 		-1, -1,  1, //3
 	};
 
+	//cw z up
 	static const GLfloat up[12] = {
 		-1,  1, -1, //0
 		-1,  1,  1, //1
@@ -56,6 +61,7 @@ namespace ChunkMesh
 		 1,  1, -1,  //3
 	};
 
+	// ccw
 	static const GLfloat left[12] = {
 		-1, -1,  1, //3
 		-1,  1,  1, //2
@@ -63,6 +69,7 @@ namespace ChunkMesh
 		-1, -1, -1, //0
 	};
 
+	// cw
 	static const GLfloat right[12] = {
 		 1, -1, -1, //0 //3
 		 1,  1, -1, //3 //2
@@ -70,13 +77,15 @@ namespace ChunkMesh
 		 1, -1,  1, //1 //0
 	};
 
+	//cw
 	static const GLfloat back[12] = {
 		-1, -1, -1,
 		-1,  1, -1,
 		 1,  1, -1,
-		 1, -1, -1
+		 1, -1, -1,
 	};
 
+	//ccw
 	static const GLfloat forwards[12] = {
 		 1, -1,  1, //3
 		 1,  1,  1, //2
@@ -97,6 +106,27 @@ namespace ChunkMesh
 		0, 1, 2,
 		0, 2, 3
 	};
+
+	static const GLuint triFaceFlipped[6] = {
+		3, 1, 2,
+		3, 0, 1
+	};
+
+	static const GLfloat* CornersInDirection(int FaceDir)
+	{
+		switch (FaceDir)
+		{
+		case FACE_DOWN: return down;
+		case FACE_UP: return up; 
+		case FACE_LEFT: return left;
+		case FACE_RIGHT: return right;
+		case FACE_BACK: return back; 
+		case FACE_FORWARD: return forwards;
+		default:
+			break;
+		}
+		return nullptr;
+	}
 
 	// static array of tri indices: tris are always the same for each chunk
 	// only varying in the number of indices to used.
@@ -179,6 +209,29 @@ namespace ChunkMesh
 		return off * vec2(TextureTileSizeX, TextureTileSizeY);
 	}
 
+	static vec2 TileOffsetForDir(int FaceDir)
+	{
+		vec2 off;
+		switch (FaceDir)
+		{
+		case IDirections::FD_DOWN:
+		default:
+			off = vec2(0, 0); break;
+		case IDirections::FD_UP:
+			off = vec2(1, 0); break;
+		case IDirections::FD_LEFT:
+			off = vec2(2, 0); break;
+		case IDirections::FD_RIGHT:
+			off = vec2(0, 1); break;
+		case IDirections::FD_BACK:
+			off = vec2(1, 1); break;
+		case IDirections::FD_FORWARD:
+			off = vec2(2, 1); break;
+		}
+
+		return off * vec2(TextureTileSizeX, TextureTileSizeY);
+	}
+
 	
 	// transfer to mesher
 	static void AddFace(
@@ -203,7 +256,8 @@ namespace ChunkMesh
 		}
 
 		
-		auto offset = TileOffsetForVoxType(voxType, FaceDir);
+		//auto offset = TileOffsetForVoxType(voxType, FaceDir);
+		auto offset = TileOffsetForDir(FaceDir);
 		int i, j;
 		for (i = 0; i < 4; ++i)
 		{
