@@ -154,7 +154,7 @@ namespace ChunkMesh
 			}
 
 			auto shadow = aoLight[i]; // GetAOLight(FaceDir, v, relPos, rubiks);
-			GLfloat color[] = { shadow, shadow, shadow * flipVerts, 1 };
+			GLfloat color[] = { 1, 1, 1, shadow };
 			for (j = 0; j < 4; ++j)
 			{
 				vvert.color[j] = color[j];
@@ -168,6 +168,8 @@ namespace ChunkMesh
 			vface.tris[i] = (flipVerts ? triFaceFlipped[i] : triFace[i]) + relIndex;
 		}
 	}
+
+
 
 	void AddFaceM_(
 		int FaceDir,
@@ -200,6 +202,61 @@ namespace ChunkMesh
 
 	}
 
+
+#ifndef USE_LODS
+
+	//transfer to Mesher
+	void CreateMeshM(Cube6::RubiksChunk& rubiks, MeshData& md)
+	{
+		ivec3 cursor;
+		Voxel vox;
+		ivec3 relPos;
+		int relIndex = 0;
+
+		Chunk* chunk = rubiks.center();
+
+		for (int x = 0; x < CHUNK_SIZE; ++x)
+		{
+			relPos.x = x;
+			for (int y = 0; y < CHUNK_SIZE; ++y)
+			{
+				relPos.y = y;
+				for (int z = 0; z < CHUNK_SIZE; ++z)
+				{
+					relPos.z = z;
+
+					chunk->voxelAtSafe(relPos, vox);
+
+					if (vox.type <= VEMPTY) { continue; }
+
+					int face;
+					for (face = FACE_DOWN; face <= FACE_FORWARD; ++face)
+					{
+						cursor = FromDir(face) + relPos;
+						bool shouldAdd = true;
+
+						if (rubiks.voxelAtSafe(cursor, vox))
+						{
+							shouldAdd = vox.type == VEMPTY;
+						}
+
+						if (shouldAdd)
+						{
+							AddFaceM_(face, vox.type, relPos, relIndex, rubiks, md); // mds[mortonLevel]);
+
+							//AddFace_(face, vox.type, relPos, relIndex, md);
+							relIndex += 4;
+						}
+					}
+				}
+			}
+		}
+
+		md.lodTriOffsets[0] = relIndex / 4 * 6;
+
+	}
+#else
+
 	//
 	// Builds a chunk mesh
 	// Orders faces by grouping according to LOD.
@@ -210,14 +267,14 @@ namespace ChunkMesh
 	void CreateMeshM(Cube6::RubiksChunk& rubiks, MeshData& md)
 	{
 		veci3 cursor;
+		veci3 nudgePos, lvlCursor;
 		Voxel vox;
 		veci3 relPos;
-		int relIndex = 0;
 
 		Chunk* chunk = rubiks.center();
 		
-		// CONSIDER: this LOD strategy will add (hopefully not too many) faces
-		// since chunkier LOD levels have more chances to be visible
+		// CONSIDER: this LOD strategy will add (hopefully not too many?) faces
+		// since chunkier LOD faces have more chances to be visible
 		// and yet these extra faces will carry over to lower lods
 		// for now: 'oh well'
 
@@ -266,15 +323,15 @@ namespace ChunkMesh
 
 					// for positive direction, look for voxels at the 'outer' edge of the LOD cube
 					// for example: (face == RIGHT, mortonLevel = 2) move to pos (3, 0, 0) (i.e. lower right side voxel)
-					veci3 nudgePos = ((veci3)IDirections::DirForFaceDir(face)) *
+					nudgePos = IDirections::VIDirForFaceDir(face) *
 						(IDirections::IsNegativeDirection(face) ? 0 : (1 << lvl) - 1);
 
-					veci3 lvlCursor = SnapToLOD(lvl, relPos);
+					lvlCursor = SnapToLOD(lvl, relPos);
 
 					for (auto it = lodfaceIncrs.begin(); it != lodfaceIncrs.end(); ++it)
 					{
-						cursor = (lvlCursor + nudgePos + *it).toGLMIVec3();
-						if (rubiks.voxelAtSafe(cursor, vox))
+						cursor = (lvlCursor + nudgePos + *it);
+						if (rubiks.voxelAtSafe(cursor.x, cursor.y, cursor.z, vox))
 						{
 							shouldAdd = vox.type == VEMPTY;
 							if (shouldAdd)
@@ -284,19 +341,13 @@ namespace ChunkMesh
 							}
 						}
 					}
-					/*
-					// OLD visible (no LOD)
-					cursor = FromDir(face) + relPos;
-					if (rubiks.voxelAtSafe(cursor, vox))
-					{
-						shouldAdd = vox.type == VEMPTY;
-					}
-					*/
 
 					if (shouldAdd)
 					{
-						AddFaceM_(face, vox.type, relPos, relIndex, rubiks, mds[mortonLevel]);
-						relIndex += 4;
+						//tri offset is zero
+						//offsets will be tallied below
+						AddFaceM_(face, vox.type, relPos, 0, rubiks, mds[mortonLevel]);
+
 						break;
 					}
 				}
@@ -313,15 +364,23 @@ namespace ChunkMesh
 			{
 				md.verts.push_back(*it);
 			}
-			for (auto it = mds[i].tris.begin(); it != mds[i].tris.end(); ++it)
+
+			for (int j = 0; j < mds[i].tris.size(); j += 6)
 			{
-				md.tris.push_back(*it + triOffset);
+				for (int k = 0; k < 6; ++k)
+				{
+					md.tris.push_back(mds[i].tris[j + k] + triOffset);
+				}
+				triOffset += 4;
 			}
-			md.lodTriOffsets[NUM_LODS - 1 - i] = mds[i].tris.size();
-			triOffset += md.lodTriOffsets[NUM_LODS - 1 - i];
+			md.lodTriOffsets[NUM_LODS - 1 - i] = triOffset / 4 * 6; 
 		}
-		
+
+		std::cout << "did mesh at? << " << ((veci3) chunk->chunkPosition()) << " vert size; " << md.verts.size() << std::endl;
 		
 	}
+	
+
+#endif
 
 }

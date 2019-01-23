@@ -4,6 +4,7 @@
 #include "FlatPow2Array3D.h"
 #include "WorldConfig.h"
 #include "MeshData.h"
+#include "AACube.h"
 #include <stdio.h>
 #include <memory>
 
@@ -29,6 +30,7 @@ enum VoxelType
 	VEMPTY, 
 	VDIRT, 
 	VGRASS, 
+	VTREE_TRUNK,
 };
 
 enum BuildChunkStage
@@ -60,7 +62,16 @@ public:
 		data(FlatPow2Array3D<Voxel>(LOG_TWO_CHUNK_SIZE)),
 		chunkPos(_chunkPos),
 		pos(NChunkRelative::ChunkPosToPos(_chunkPos)),
-		dirty(true)
+		isMeshDirty(true) 
+	{
+		Init();
+	}
+
+	Chunk(ivec3 _chunkPos, int size_) :
+		data(FlatPow2Array3D<Voxel>(size_)),
+		chunkPos(_chunkPos),
+		pos(NChunkRelative::ChunkPosToPos(_chunkPos)),
+		isMeshDirty(true)
 	{
 		Init();
 	}
@@ -75,11 +86,8 @@ public:
 	Chunk(const Chunk& other) = delete;
 	
 
-	~Chunk() 
-	{
-		printf("chunk dtor: ");
-		Debug();
-	}
+	~Chunk();
+	
 
 	int dbugName;
 
@@ -96,6 +104,8 @@ public:
 	vec3 positionV3() const { return vec3(pos.x, pos.y, pos.z); }
 	vec3 centerV3() const { return positionV3() + VEC3_CHUNK_SIZE / 2.0f; }
 
+	VEMath::AACube& GetAACube() { return aacube; }
+
 	mat4 getModelMatrix()
 	{
 		return glm::translate(mat4(1.0f), positionV3());
@@ -103,8 +113,9 @@ public:
 	ivec3 chunkPosition() { return chunkPos; }
 
 	virtual bool getIsEmpty() const { return empty; }
-	virtual bool getIsDirty() const { return dirty; }
-	void setDirty(bool _dirty) { dirty = _dirty; }
+	virtual void updateIsEmpty();
+	virtual bool getIsMeshDirty() const { return isMeshDirty; }
+	void setIsMeshDirty(bool _dirty) { isMeshDirty = _dirty; }
 
 	virtual void generateVoxels(VoxelAtFunc voxelAt);
 	virtual Voxel voxelAt(ivec3 pos);
@@ -114,6 +125,26 @@ public:
 
 	void Debug();
 
+	Voxel* getData() { return data.data(); }
+
+	// used to read data from disk
+	void TakeVoxelArray(Voxel* _storage)
+	{
+		data.TakePointer(_storage, LOG_TWO_CHUNK_SIZE);
+	}
+
+	const FlatPow2Array3D<Voxel>& GetFlatArray() { return data; }
+
+	int getSize() const { return data.size(); }
+
+	int getSizeBytes() const { return data.size() * sizeof(Voxel); }
+
+	void TestSetAVoxel(int i, Voxel vox)
+	{
+		data.get(i) = vox;
+	}
+
+	void SetBuildStage(int stage);
 
 protected:
 	Chunk() : 
@@ -127,6 +158,7 @@ protected:
 		dbugName = -1;
 		empty = true;
 		buildStage = BCSNEVER_GENERATED;
+		aacube = VEMath::AACube(positionV3(), CHUNK_SIZE);
 	}
 
 	void doGenerateVoxels(VoxelAtFunc voxelAt);
@@ -136,8 +168,10 @@ protected:
 	ivec3 chunkPos;
 	ivec3 pos;
 	bool empty;
-	bool dirty;
+	bool isMeshDirty;
 	int buildStage;
+
+	VEMath::AACube aacube;
 };
 
 class VoidChunk : public Chunk
@@ -150,6 +184,7 @@ public:
 	}
 
 	bool getIsEmpty() { return true; }
+
 	bool getIsDirty() { return false; }
 
 	void generateVoxels(VoxelAtFunc voxelAt) { }
@@ -169,6 +204,7 @@ public:
 	}
 
 	bool isAVoidChunk() { return true; }
+
 
 };
 

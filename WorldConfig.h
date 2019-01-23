@@ -3,6 +3,8 @@
 #include <glm/glm.hpp>
 #include "MathHelper.h"
 
+#define DEFAULT_WORLD_NAME ("DefaultWorld")
+
 #define LOG_TWO_CHUNK_SIZE 4
 #define CHUNK_SIZE 16
 #define HALF_CHUNK_SIZE 8
@@ -13,7 +15,7 @@
 
 #define VEC3_CHUNK_SIZE (vec3(CHUNK_SIZE, CHUNK_SIZE, CHUNK_SIZE))
 
-// worst case chunk: 3d 'checker board'
+// worst case chunk: 3d checker board
 // for CHUNK_SIZE = 16
 // a pair of rows has 8 + 7 voxels
 // 8 row pairs per XY slice
@@ -22,22 +24,27 @@
 // (8 + 7) * 8 * 16 * 6 = 11520
 #define MAX_FACES_PER_CHUNK 11520 
 
-// be stingy: in the scenarios we're imagining
+// be stingy: in the scenarios we're imagining,
 // we'll (almost?) never get anywhere near the worst case.
 // assume the worst case we'll actually ever see
 // is equal to 8 evenly spaced walls (based on we're not sure what)
 // each wall has 256 * 2 + 16 * 4 faces
 // * 8 walls per chunk
+// Used with static tris
 #define PROBABLE_WORST_CASE_FACES_PER_CHUNK 4608
 
 #pragma region LOD
 
+
+#define USE_LODS
 #define NUM_LODS 3
 
 #pragma endregion
 
+// uncomment to use a single tri index buffer for all chunks
+// smooth lighting requires per chunk tri indices
+// #define STATIC_TRI_INDICES 
 
-#define STATIC_TRI_INDICES 
 //
 // World data
 //
@@ -70,6 +77,16 @@ namespace NChunkRelative
 		auto result = Log2Div(pos, LOG_TWO_CHUNK_SIZE);
 		relPos = NegToPosMod(pos, IV_CHUNK_SIZE);
 		return result;
+	}
+
+	static veci3 PosToChunkPosVecI3(int x, int y, int z, veci3& relPos)
+	{
+		int xx = x >> LOG_TWO_CHUNK_SIZE;
+		int yy = y >> LOG_TWO_CHUNK_SIZE;
+		int zz = z >> LOG_TWO_CHUNK_SIZE;
+
+		relPos = NegToPosMod(x, y, z, CHUNK_SIZE);
+		return veci3(xx, yy, zz);
 	}
 
 	static ivec3 PosToChunkPos(ivec3 pos, veci3& relPos)

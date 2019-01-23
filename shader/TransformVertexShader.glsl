@@ -29,6 +29,12 @@ void main()
 	
 	// UV of the vertex. No special space for this one.
 	UV = vertexUV;
-	COLOR_ = color;
+
+	vec4 c = color;
+	// no shadows at lod > 0
+	if(scale > 1.1)
+		c.w = 1.0;
+
+	COLOR_ = c;
 }
 

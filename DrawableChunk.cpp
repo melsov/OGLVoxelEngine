@@ -52,15 +52,13 @@ void DrawableChunk::LoadBuffers()
 	//handles.verts = loadBuffer(&m.verts);
 	handles.verts = loadBuffer(m.verts[0].pos, m.verts.size() * sizeof(ChunkMesh::VVertex));
 
-	// tris?
 #ifndef STATIC_TRI_INDICES
-	int size = m.tris.size() * sizeof(TRI_T);
-	GLuint handle;
-	glGenBuffers(1, &handle);
-	glBindBuffer(GL_ARRAY_BUFFER, handle);
-	glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_STATIC_DRAW);
-	glBufferSubData(GL_ARRAY_BUFFER, 0, size, &(m.tris[0])); 
-	handles.tris = handle; 
+
+	//per chunk tris
+	glGenBuffers(1, &handles.tris);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handles.tris);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, m.tris.size() * sizeof(TRI_T), &(m.tris[0]), GL_STATIC_DRAW);
+
 #endif
 
 	//handles.uvs = loadBuffer(&m.uvs);

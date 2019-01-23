@@ -80,8 +80,10 @@ public:
 #pragma region unload
 
 	void Unload(veci3 cpos);
+	void WriteAll();
 
 private:
+	void WriteChunk(veci3 cpos);
 	void Unmesh(veci3 cpos);
 	void Ungenerate(veci3 cpos);
 
@@ -101,7 +103,7 @@ public:
 
 	void TestUnloadDrawableBuffers();
 
-	void TestDrawDrawables(const VECam::CamData& cam); // glm::mat4 View, glm::mat4 Proj);
+	//void TestDrawDrawables(const VECam::CamData& cam); // glm::mat4 View, glm::mat4 Proj);
 
 #pragma endregion
 

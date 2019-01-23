@@ -32,18 +32,11 @@ public:
 	void LoadBuffers();
 	void Draw(glm::mat4 View, glm::mat4 Projection, int LOD = 0);
 
-	//BufferHandles GetBufferHandles() { return handles; }
-
-	//ChunkMesh::LODMeshDataSet* md;
 	ChunkMesh::MeshData* md;
-
-	//std::vector<GLfloat>* verts;
-	//std::vector<GLfloat>* uvs;
 
 	Material mat;
 
 	glm::mat4 ModelMatrix;
-
 
 
 private:

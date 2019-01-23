@@ -30,7 +30,40 @@ int DrawChunks::GetLOD(float dist)
 	return NUM_LODS - 1;
 }
 
-void DrawChunks::Draw(const VECam::CamData& cam)
+bool DrawChunks::InFrustum(VECam::CamData& cam, Chunk& chunk)
+{
+
+	auto cpos = chunk.positionV3();
+	float closestForwardDistSq = 999999999.0f;
+	for (int i = 0; i < 8; ++i)
+	{
+		auto p = cpos + (IDirections::EightCorners[i] * (float)CHUNK_SIZE);
+		if (cam.IsPointInFrustum(p))
+		{
+			return true;
+		}
+
+		//fallback calculation
+		auto dif = (p - cam.getPosition());
+		float dist = glm::dot(dif, dif);
+		if (dist < closestForwardDistSq && glm::dot(dif, cam.getDirection()) > 0.0f)
+		{
+			closestForwardDistSq = dist;
+		}
+	}
+
+	// we might be quite close to the chunk
+	// unable to see any of its corners
+	return (closestForwardDistSq < (CHUNK_SIZE * CHUNK_SIZE));
+
+	
+	// Nice to use math, but this doesn't work. (Plus, it should be slower)
+	//return cam.IsCubeInFrustum(chunk.GetAACube());
+}
+
+
+
+void DrawChunks::Draw( VECam::CamData& cam)
 {
 	auto View = cam.getViewMatrix();
 	auto Proj = cam.getProjectionMatrix();
@@ -43,21 +76,8 @@ void DrawChunks::Draw(const VECam::CamData& cam)
 			continue;
 		}
 
-		bool inFrustum = false;
 		auto cpos = chunk->positionV3();
-
-		for (int i = 0; i < 8; ++i)
-		{
-			auto p = cpos + (IDirections::EightCorners[i] * (float)CHUNK_SIZE);
-			if (cam.IsPointInFrustum(p))
-			{
-				inFrustum = true;
-				break;
-			}
-		}
-
-
-		if (inFrustum)
+		if (InFrustum(cam, *chunk))
 		{
 			// find least distance
 			glm::float32 leastDistance = 99999999.0f;

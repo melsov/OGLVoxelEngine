@@ -40,8 +40,10 @@ using namespace glm;
 #include "LODFaceCoords.h"
 #include "DrawChunks.h"
 #include "Mesher.h"
+#include "IOChunk.h"
 
 
+veci3 playerStartOffsetChunks(0, 0, 0);
 veci3 fakePlayerPos(HALF_CHUNK_SIZE);
 
 void updateFakePlayerPos(int key)
@@ -223,42 +225,34 @@ Voxel SmoothLightTestCubes(int x, int y, int z)
 	
 }
 
-void TestSomething()
+bool TestSomething()
 {
 	// test code here
 
 	
 
-	for (int fd = 0; fd < IDirections::FD_NUM_FACE_DIRECTIONS; ++fd)
-	{
-		auto corners = ChunkMesh::CornersInDirection(fd);
-		cout << IDirections::FaceDirNames[fd] << endl;
+	
 
-		for (int i = 0; i < 4; ++i)
-		{
-			veci3 corner;
-			for (int j = 0; j < 3; ++j)
-			{
-				corner[j] = corners[i * 3 + j];
-			}
-			veci3 relPos(2,2,2);
-			ChunkMesh::GetShadowTest(fd, corner, relPos);
-			cout << endl;
-		}
-
-	}
 	// end test code
+	/*char in;
+	std::cout << "q to quit" << std::endl;
+	std::cin >> in;
+	if (in == 'q')
+	{
+		return false;
+	}*/
 
-	// while (glfwGetKey(window, GLFW_KEY_ESCAPE) != GLFW_PRESS && glfwWindowShouldClose(window) == 0); 
+	return true;
+
 }
 
 Voxel TestGetVoxel(int x, int y, int z)
 {
 	//return XZBars(x, y, z);
-	//return CornerCubes(x, y, z);
+	return CornerCubes(x, y, z);
 	//return CornerCubesWithConnectors(x, y, z);
 	//return CenteredCubes(x, y, z);
-	return UpsideDownQuarterPyramid(x, y, z);
+	//return UpsideDownQuarterPyramid(x, y, z);
 	//return SmoothLightTestCubes(x, y, z);
 }
 
@@ -360,13 +354,16 @@ void pause()
 
 int main(void)
 {
+	if (!TestSomething())
+	{
+		return 0;
+	}
 
 	if (initGLFWAndGLEW() < 0)
 	{
 		return -1;
 	}
 
-	TestSomething();
 
 #pragma region setup-shader-etc
 
@@ -430,7 +427,8 @@ GLFW_KEY_B,
 GLFW_KEY_C,
 GLFW_KEY_V,
 GLFW_KEY_Y, 
-GLFW_KEY_L,};
+GLFW_KEY_L,
+GLFW_KEY_T,};
 
 	keyDebouncer.Track(trackKeys, sizeof(trackKeys));
 
@@ -441,6 +439,8 @@ GLFW_KEY_L,};
 
 	DrawChunks drawChunks(builder.getMeshedMap(), cset);
 	drawChunks.SetLOD(CHUNK_SIZE * 2.5, .3);
+
+	fakePlayerPos = fakePlayerPos + playerStartOffsetChunks * CHUNK_SIZE;
 
 	VEChunkMgmt::ChunkProximity proximity(builder, &providePlayerPos);
 
@@ -493,6 +493,10 @@ GLFW_KEY_L,};
 		if (lastKey.keyCode == GLFW_KEY_L)
 		{
 			builder.DEBUGLODLEVEL = (builder.DEBUGLODLEVEL + 1) % NUM_LODS;
+		}
+		if (lastKey.keyCode == GLFW_KEY_T)
+		{
+			builder.WriteAll();
 		}
 
 		//

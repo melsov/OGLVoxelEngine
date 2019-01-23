@@ -123,6 +123,15 @@
     <ClCompile Include="DrawChunks.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GLMHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AACube.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="IOChunk.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -252,6 +261,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DrawChunks.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GLMHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AACube.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IOChunk.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

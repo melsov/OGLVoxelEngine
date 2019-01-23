@@ -7,18 +7,26 @@
 #include <memory>
 #include "WorldConfig.h"
 #include <Windows.h>
+#include <string>
+#include "IOChunk.h"
 
 class ChunkSet
 {
+	IOChunk iochunk;
 public:
-	ChunkSet() :
+	ChunkSet() : ChunkSet(DEFAULT_WORLD_NAME) {}
+
+	ChunkSet(std::string _worldName) :
+		iochunk(_worldName),
 		_voidChunk(ivec3(-9999, -9999, -9999))
 	{
+		iochunk.DebugDestroyWorldData(); //DBUG
 	}
 
-	~ChunkSet() 
-	{
-	}
+	~ChunkSet();
+	
+
+	std::string GetWorldName() { return iochunk.GetWorldName(); }
 
 	bool Contains(veci3 chunkPos) const
 	{
@@ -55,62 +63,15 @@ public:
 		return false;
 	}
 
-	Chunk* GetOrCreate(veci3 chunkPos)
-	{
-		bool debugCheck = CreateAt(chunkPos);
+	bool CreateAt(veci3 chunkPos);
 
-		// DEBUG
-		if (debugCheck)
-		{
-			auto ch = Get(chunkPos);
-			if (ch == nullptr)
-			{
-				printf("chunk set *** ! we're storing a null chunk ptr at: "); DebugVec3(chunkPos.toGLMIVec3());
-			}
-		}
-		else
-		{
-			if (WorldContainsChunkPos(chunkPos.toGLMIVec3()))
-			{
-				auto ch = Get(chunkPos);
-				if (ch == nullptr)
-				{
-					printf("chunk set *** ! we're storing a null chunk ptr at: "); DebugVec3(chunkPos.toGLMIVec3());
-				}
-			}
-		}
-		//END DEBUG
+	Chunk* GetOrCreate(veci3 chunkPos);
 
-		return Get(chunkPos);
-	}
+	void Write(veci3 cpos);
 
+	bool EraseAt(veci3 cpos);
+	
 
-	bool CreateAt(veci3 chunkPos)
-	{
-		if (!WorldContainsChunkPos(chunkPos.toGLMIVec3()))
-		{
-			return false;
-		}
-		if (data.find(chunkPos) == data.end())// !Contains(chunkPos)) 
-		{
-			data.insert(std::make_pair(chunkPos, std::unique_ptr<Chunk>(new Chunk(chunkPos.toGLMIVec3()))));
-			return true;
-		}
-
-		return false;
-	}
-
-	bool EraseAt(veci3 cpos)
-	{
-		if (data.find(cpos) == data.end())
-		{
-			return false;
-		}
-
-		data.erase(cpos);
-
-		return true;
-	}
 
 	void DebugContents()
 	{

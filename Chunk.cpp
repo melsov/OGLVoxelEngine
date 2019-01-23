@@ -3,6 +3,11 @@
 #include <map>
 
 
+Chunk::~Chunk()
+{
+	printf("chunk dtor: ");
+	Debug();
+}
 
 
 void Chunk::doGenerateVoxels(VoxelAtFunc voxelAt)
@@ -33,6 +38,27 @@ void Chunk::doGenerateVoxels(VoxelAtFunc voxelAt)
 		}
 	}
 	empty = !foundNonAir;
+}
+
+
+
+
+void Chunk::SetBuildStage(int stage)
+{
+	buildStage = stage;
+}
+
+void Chunk::updateIsEmpty()
+{
+	for (int i = 0; i < data.size(); ++i)
+	{
+		if (data[i].type > VEMPTY)
+		{
+			empty = false;
+			return;
+		}
+	}
+	empty = true;
 }
 
 void Chunk::generateVoxels(VoxelAtFunc voxelAt)
@@ -77,6 +103,7 @@ void Chunk::Debug()
 	printf("ChunkDBUG: name: %d addr of flatarr: %x\n", dbugName, &data);
 	data.debug();
 }
+
 
 Voxel * Chunk::readFromDisk()
 {

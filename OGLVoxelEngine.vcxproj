@@ -133,6 +133,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AACube.cpp" />
     <ClCompile Include="BuildChunkSelector.cpp" />
     <ClCompile Include="CamData.cpp" />
     <ClCompile Include="Chunk.cpp" />
@@ -155,6 +156,8 @@
     <ClCompile Include="DrawChunks.cpp" />
     <ClCompile Include="Environment.cpp" />
     <ClCompile Include="FlatPow2Array3D.cpp" />
+    <ClCompile Include="GLMHelper.cpp" />
+    <ClCompile Include="IOChunk.cpp" />
     <ClCompile Include="KeyboardDebouncer.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Material.cpp" />
@@ -170,6 +173,7 @@
     <None Include="shader\TransformVertexShader.glsl" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AACube.h" />
     <ClInclude Include="atomicops.h" />
     <ClInclude Include="BecomeActiveObject.h" />
     <ClInclude Include="BuildChunkSelector.h" />
@@ -195,6 +199,8 @@
     <ClInclude Include="DrawChunks.h" />
     <ClInclude Include="Environment.h" />
     <ClInclude Include="FlatPow2Array3D.h" />
+    <ClInclude Include="GLMHelper.h" />
+    <ClInclude Include="IOChunk.h" />
     <ClInclude Include="KeyboardDebouncer.h" />
     <ClInclude Include="LODFaceCoords.h" />
     <ClInclude Include="Material.h" />

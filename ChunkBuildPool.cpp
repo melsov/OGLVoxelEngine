@@ -136,7 +136,7 @@ void ChunkBuildPool::PushToMeshThread(int maxChunksToMesh)
 
 		if (meshed.find(veci3(builder->GetCenterChunkPos())) != meshed.end())
 		{
-			printf("already meshed at: "); DebugVec3(builder->GetCenterChunkPos());
+			printf(" already meshed at: "); DebugVec3(builder->GetCenterChunkPos());
 			continue;
 		} // or is the chunk dirty?
 
@@ -165,8 +165,11 @@ void ChunkBuildPool::CollectFromMeshThread(int maxChunksToMesh, Material mat, GL
 			chunk->getModelMatrix(),
 			mat,
 			chunkTriBufferHandle);
-		drawable->md = &chunk->meshData; // &chunk->meshSet;
+
+		drawable->md = &chunk->meshData; 
 		drawable->LoadBuffers();
+
+		std::cout << "insert into meshed: " << cpos << std::endl;
 		meshed.insert(std::make_pair(cpos, drawable));
 
 		Preserve27(cpos, false);
@@ -244,8 +247,25 @@ void ChunkBuildPool::Unload(veci3 cpos)
 
 		preserve.erase(cpos);
 	}
+	WriteChunk(cpos);
+}
+
+
+
+void ChunkBuildPool::WriteChunk(veci3 cpos)
+{
+	chunkSet.Write(cpos);
+
 	Unmesh(cpos);
 	Ungenerate(cpos);
+}
+
+void ChunkBuildPool::WriteAll()
+{
+	for (auto it = meshed.begin(); it != meshed.end(); ++it)
+	{
+		chunkSet.Write(it->first);
+	}
 }
 
 void ChunkBuildPool::Unmesh(veci3 cpos)
@@ -304,54 +324,54 @@ void ChunkBuildPool::TestUnloadDrawableBuffers()
 
 //TODO: chunk drawing class
 // relieve build pool of unrelated functionality
-void ChunkBuildPool::TestDrawDrawables(const VECam::CamData& cam)
-{
-	auto View = cam.getViewMatrix();
-	auto Proj = cam.getProjectionMatrix();
-
-	for (auto it = meshed.begin(); it != meshed.end(); ++it)
-	{
-		auto chunk = chunkSet.Get(it->first);
-		if (chunk == nullptr || chunk->getIsEmpty())
-		{
-			continue;
-		}
-
-		bool inFrustum = false;
-		auto cpos = chunk->positionV3();
-		for (int i = 0; i < 8; ++i)
-		{
-			auto p = cpos + (IDirections::EightCorners[i] * (float)CHUNK_SIZE);
-			if (cam.IsPointInFrustum(p))
-			{
-				inFrustum = true;
-				break;
-			}
-		}
-
-
-		if (inFrustum)
-		{
-			// find lod with distance from cam
-			auto dist = chunk->centerV3() - cam.getPosition();
-			int lod = NUM_LODS - 1; // DEBUGLODLEVEL >= 0 ? DEBUGLODLEVEL : 0;
-			float d = glm::length(dist);
-			if (d < CHUNK_SIZE * 1.5)
-			{
-				lod = 0;
-			}
-			/*else if (d > CHUNK_SIZE)
-			{
-				lod = max(NUM_LODS - 2, 0);
-			}*/
-			// TODO: choose lod func. based on cpos cam pos;
-			// it->second.get()->set[lod]->Draw(View, Proj);
-			it->second.get()->Draw(View, Proj, lod);
-		}
-
-	}
-
-}
+//void ChunkBuildPool::TestDrawDrawables(const VECam::CamData& cam)
+//{
+//	auto View = cam.getViewMatrix();
+//	auto Proj = cam.getProjectionMatrix();
+//
+//	for (auto it = meshed.begin(); it != meshed.end(); ++it)
+//	{
+//		auto chunk = chunkSet.Get(it->first);
+//		if (chunk == nullptr || chunk->getIsEmpty())
+//		{
+//			continue;
+//		}
+//
+//		bool inFrustum = false;
+//		auto cpos = chunk->positionV3();
+//		for (int i = 0; i < 8; ++i)
+//		{
+//			auto p = cpos + (IDirections::EightCorners[i] * (float)CHUNK_SIZE);
+//			if (cam.IsPointInFrustum(p))
+//			{
+//				inFrustum = true;
+//				break;
+//			}
+//		}
+//
+//
+//		if (inFrustum)
+//		{
+//			// find lod with distance from cam
+//			auto dist = chunk->centerV3() - cam.getPosition();
+//			int lod = NUM_LODS - 1; // DEBUGLODLEVEL >= 0 ? DEBUGLODLEVEL : 0;
+//			float d = glm::length(dist);
+//			if (d < CHUNK_SIZE * 1.5)
+//			{
+//				lod = 0;
+//			}
+//			/*else if (d > CHUNK_SIZE)
+//			{
+//				lod = max(NUM_LODS - 2, 0);
+//			}*/
+//			// TODO: choose lod func. based on cpos cam pos;
+//			// it->second.get()->set[lod]->Draw(View, Proj);
+//			it->second.get()->Draw(View, Proj, lod);
+//		}
+//
+//	}
+//
+//}
 
 
 

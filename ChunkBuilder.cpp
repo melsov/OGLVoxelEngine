@@ -37,7 +37,7 @@ void ChunkBuilder::Generate(VoxelAtFunc voxelAt, ChunkSet& cset)
 
 void ChunkBuilder::Mesh()
 {
-	if (!rubiks.center()->getIsDirty())
+	if (!rubiks.center()->getIsMeshDirty())
 	{
 		return;
 	}
@@ -47,10 +47,10 @@ void ChunkBuilder::Mesh()
 		throw 7; // no reason for 7. (TODO: learn to use exceptions meaningfully)
 	}
 
-	rubiks.center()->setDirty(false);
-
 	ChunkMesh::MeshData& md = rubiks.center()->meshData;
 	ChunkMesh::CreateMeshM(rubiks,  md);
+
+	rubiks.center()->setIsMeshDirty(false);
 
 	md.debug();
 }

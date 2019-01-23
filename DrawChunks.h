@@ -14,6 +14,8 @@ class DrawChunks
 
 	int GetLOD(float dist);
 
+	bool InFrustum(VECam::CamData& cam, Chunk& chunk);
+
 public:
 	DrawChunks(TMeshedMap *_meshed, ChunkSet& _chunkSet);
 	~DrawChunks();
@@ -21,6 +23,6 @@ public:
 	void SetLOD(float innerRad, float decay = .1f);
 
 
-	void Draw(const VECam::CamData& cam);
+	void Draw( VECam::CamData& cam);
 };
 

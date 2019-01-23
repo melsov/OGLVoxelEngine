@@ -19,11 +19,11 @@ namespace VECam
 		glfwGetCursorPos(window, &xpos, &ypos);
 
 		// Reset mouse position for next frame
-		glfwSetCursorPos(window, 1024 / 2, 768 / 2);
+		glfwSetCursorPos(window, 1024 / 2.0f, 768 / 2.0f);
 
 		// Compute new orientation
-		horizontalAngle += mouseSpeed * float(1024 / 2 - xpos);
-		verticalAngle -= mouseSpeed * float(768 / 2 - ypos);
+		horizontalAngle += mouseSpeed * float(1024 / 2.0f - xpos);
+		verticalAngle -= mouseSpeed * float(768 / 2.0f - ypos);
 
 		// Direction : Spherical coordinates to Cartesian coordinates conversion
 		direction = glm::vec3(
@@ -85,11 +85,35 @@ namespace VECam
 			up                  // Head is up (set to 0,-1,0 to look upside-down)
 		);
 
+		frustum.SetPlanes(ViewMatrix*ProjectionMatrix);
+
 		// For the next frame, the "last time" will be "now"
 		lastTime = currentTime;
 	}
 
-	//TODO: new func Cube intersects frustum
+
+	//Cube intersects frustum
+	bool CamData::IsCubeInFrustum(const VEMath::AACube & cube)
+	{
+
+		for (int i = 0; i < 6; ++i)
+		{
+			const Plane& p = frustum.planes.get(i);
+
+			VEMath::Edge edge;
+
+			for (int j = 0; j < 12; ++j)
+			{
+				edge = cube.getEdge(j);
+				if (p.SegmentIntersects(edge.a, edge.b))
+				{
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	// in some cases no chunk corner is in frustum but a middle section is?
 	bool CamData::IsPointInFrustum(glm::vec3 v) const
 	{

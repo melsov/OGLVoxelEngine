@@ -96,6 +96,20 @@ namespace Cube6
 			return chunk->voxelAt(rel);
 		}
 
+		bool voxelAtSafe(int x, int y, int z, Voxel& voxel)
+		{
+			veci3 cpos, rel;
+			cpos = NChunkRelative::PosToChunkPosVecI3(x, y, z, rel); // PosToChunkPos(relPos, rel);
+			auto chunk = get(cpos.x, cpos.y, cpos.z);
+			if (chunk != nullptr)
+			{
+				voxel = chunk->voxelAt(rel);
+				return true;
+			}
+
+			return false;
+		}
+
 		bool voxelAtSafe(ivec3 relPos, Voxel& voxel)
 		{
 			ivec3 cpos, rel;

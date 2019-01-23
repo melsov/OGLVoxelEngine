@@ -26,5 +26,5 @@ void main(){
 	// else 
 	// 	color.xyz = texture(myTextureSampler, UV).rgb;
 
-	color = texture( myTextureSampler, UV ).rgb * COLOR_.xyz;
+	color = texture( myTextureSampler, UV ).rgb * COLOR_.w; //xyz;
 }
