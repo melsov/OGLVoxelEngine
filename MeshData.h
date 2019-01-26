@@ -25,6 +25,26 @@ namespace ChunkMesh
 		GLfloat color[4];
 	};
 
+	bool operator==(const VVertex& lhs, const VVertex& rhs);
+	
+
+
+
+	std::ostream& operator<<(std::ostream &stream, const VVertex v);
+
+	static VVertex FakeVVertex()
+	{
+		VVertex v;
+		v.pos[0] = 3;
+		v.pos[1] = 15.9;
+		v.pos[2] = 4;
+		v.uvs[0] = .76f;
+		v.uvs[1] = .0625;
+		v.color[0] = .0013;
+		return v;
+	}
+
+
 	// Used in mesher.cpp
 	struct VFace
 	{
@@ -51,6 +71,8 @@ namespace ChunkMesh
 		}
 	};
 
+	bool AssertEqual(MeshData& a, MeshData& b);
+
 	class LODMeshDataSet
 	{
 		
@@ -58,5 +80,9 @@ namespace ChunkMesh
 		MeshData mds[NUM_LODS];
 	};
 }
+
+
+
+
 
 #endif // !_MESH_DATA_H_

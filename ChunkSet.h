@@ -25,6 +25,7 @@ public:
 
 	~ChunkSet();
 	
+	IOChunk& GetIOChunk() { return iochunk; }
 
 	std::string GetWorldName() { return iochunk.GetWorldName(); }
 

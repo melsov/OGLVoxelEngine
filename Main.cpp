@@ -41,6 +41,8 @@ using namespace glm;
 #include "DrawChunks.h"
 #include "Mesher.h"
 #include "IOChunk.h"
+#include "MeshData.h"
+#include "Material.h"
 
 
 veci3 playerStartOffsetChunks(0, 0, 0);
@@ -225,34 +227,102 @@ Voxel SmoothLightTestCubes(int x, int y, int z)
 	
 }
 
+void testIOChunk()
+{
+	IOChunk iochunk;
+	//iochunk.Test();
+
+
+	veci3 cpos(1, 0, 0);
+	veci3 relPos(0);
+	Chunk ch(cpos);
+
+
+	for (int i = 0; i < VOXELS_PER_CHUNK; ++i)
+	{
+		Voxel vox;
+		vox.type = (i % 3 == 0 ? VDIRT : (i % 3 == 1 ? VGRASS : VEMPTY));
+		ch.TestSetAVoxel(i, vox);
+	}
+
+	iochunk.WriteChunk(ch);
+
+	Chunk rch(cpos, 0);
+	if (iochunk.ReadConstructChunk(rch))
+	{
+		auto rvox = rch.voxelAt(relPos);
+		std::cout << "vox type: " << ((int)rvox.type) << std::endl;
+
+
+		std::cout << "rch size: " << rch.GetFlatArray().size()
+			<< " ch size " << ch.GetFlatArray().size() << std::endl;
+		bool deepEqual = rch.GetFlatArray().deepEquals(ch.GetFlatArray());
+		std::cout << "all equal? " << deepEqual << " ." << std::endl;
+	}
+}
+
+void TestRWMeshData()
+{
+	IOChunk iochunk;
+
+	GLfloat one = 1.001f;
+	GLfloat none = .00000001f;
+	std::cout << "one. :" << one << " . none: " << none << std::endl;
+
+	iochunk.Test();
+
+	veci3 cpos(0);
+	//Chunk ch(cpos);
+	//Material mat(3, 5);
+	//glm::mat4 fakeMatrix;
+	//DrawableChunk dc(ch.getModelMatrix(), mat, 3);
+	ChunkMesh::MeshData md;
+	md.lodTriOffsets[0] = 5; md.lodTriOffsets[1] = 4; md.lodTriOffsets[2] = 3;
+	md.tris.push_back(11); md.tris.push_back(12); md.tris.push_back(13);
+	md.verts.push_back(ChunkMesh::FakeVVertex());	md.verts.push_back(ChunkMesh::FakeVVertex());
+
+	iochunk.WriteDrawableChunk(md, cpos);
+
+	md.tris.clear();
+	md.verts.clear();
+	md.lodTriOffsets[0] = 2; md.lodTriOffsets[1] = 3;
+
+	iochunk.ReadConstructDrawableChunk(md, cpos);
+
+	for (int i = 0; i < md.tris.size(); ++i)
+	{
+		std::cout << ", TRI " << md.tris[i];
+	}
+	std::cout << std::endl;
+
+}
+
 bool TestSomething()
 {
 	// test code here
 
 	
-
+	//TestRWMeshData();
+	
+	
 	
 
 	// end test code
-	/*char in;
-	std::cout << "q to quit" << std::endl;
-	std::cin >> in;
-	if (in == 'q')
-	{
-		return false;
-	}*/
+
+	// uncomment to wait
+	//char iin; std::cout << "q to quit" << std::endl;	std::cin >> iin; return !(iin == 'q');
+
 
 	return true;
-
 }
 
 Voxel TestGetVoxel(int x, int y, int z)
 {
 	//return XZBars(x, y, z);
-	return CornerCubes(x, y, z);
+	//return CornerCubes(x, y, z);
 	//return CornerCubesWithConnectors(x, y, z);
 	//return CenteredCubes(x, y, z);
-	//return UpsideDownQuarterPyramid(x, y, z);
+	return UpsideDownQuarterPyramid(x, y, z);
 	//return SmoothLightTestCubes(x, y, z);
 }
 

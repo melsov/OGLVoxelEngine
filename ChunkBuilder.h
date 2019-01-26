@@ -6,6 +6,8 @@
 #include "RubiksChunk.h"
 #include "ChunkSet.h"
 #include "ChunkMesh.h"
+#include "IOChunk.h"
+#include <iostream>
 
 using namespace glm;
 
@@ -21,6 +23,8 @@ public:
 	void Generate(VoxelAtFunc voxelAt, ChunkSet& cset);
 
 	void Mesh();
+
+	bool ReadMesh(IOChunk& iochunk);
 
 	ivec3 GetCenterChunkPos() { return centerChunkPos; }
 

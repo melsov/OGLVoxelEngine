@@ -104,6 +104,7 @@ void ChunkBuildPool::GenerateAt(veci3 cpos)
 
 #pragma endregion
 
+//TODO: tex coords: make them wrap double for greater lods
 
 void ChunkBuildPool::StartMeshThread()
 {
@@ -120,7 +121,10 @@ void ChunkBuildPool::StartMeshThread()
 				continue;
 			}
 
-			builder->Mesh();
+			if (!builder->ReadMesh(chunkSet.GetIOChunk()))
+			{
+				builder->Mesh();
+			}
 
 			fromMeshThreadQ.enqueue(builder);
 		}
@@ -169,7 +173,7 @@ void ChunkBuildPool::CollectFromMeshThread(int maxChunksToMesh, Material mat, GL
 		drawable->md = &chunk->meshData; 
 		drawable->LoadBuffers();
 
-		std::cout << "insert into meshed: " << cpos << std::endl;
+		//std::cout << "insert into meshed: " << cpos << std::endl;
 		meshed.insert(std::make_pair(cpos, drawable));
 
 		Preserve27(cpos, false);

@@ -89,5 +89,8 @@ void ChunkSet::Write(veci3 cpos)
 		return;
 	}
 
+	//CONSIDER: if chunk is mesh dirty should we do this?
+	iochunk.WriteDrawableChunk(chunk->meshData, chunk->chunkPosition());
+
 	iochunk.WriteChunk(*chunk);
 }

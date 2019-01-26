@@ -38,7 +38,7 @@ namespace ChunkMesh
 			std::cout << "turn: " << turn << std::endl;
 			int k = IDirections::FaceDirectionFor(turn);
 			vec3 c = dcolor::dirColors[k];
-			std::cout << "color : " << k << " : " << c << std::endl;
+			//std::cout << "color : " << k << " : " << c << std::endl;
 			look = relPos + dir + (cursor * corner);
 			std::cout << look << std::endl;
 

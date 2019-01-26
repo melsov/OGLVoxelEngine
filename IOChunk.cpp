@@ -1,23 +1,36 @@
 #include "IOChunk.h"
 #include "WorldConfig.h"
 
-#include <filesystem>
+//TODO: copy tom dall's cross platform get file
 #include <iostream>
 #include <iterator>
 #include <fstream>
 #include <vector>
 #include <sstream>
+#include "platform.h"
 
+#include <filesystem>
+#include <math.h>
+
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/serialization/vector.hpp>
 
 namespace fs = std::filesystem;
+//#include <boost/filesystem.hpp>
 
 IOChunk::IOChunk() : IOChunk(DEFAULT_WORLD_NAME)
 {
 }
 
-IOChunk::IOChunk(std::string _worldName) :
-	bpath(fs::current_path() / "ChunkData" / _worldName)
+IOChunk::IOChunk(std::string _worldName) 
+	//: bpath(fs::current_path() / "ChunkData" / _worldName)
 {
+	std::ostringstream s;
+	s << ResourcePath("") << "../ChunkData/" << _worldName;
+	bpath = s.str();
+
+	//boost::filesystem::create_directory(bpath);
 	fs::create_directory(bpath);
 }
 
@@ -56,10 +69,272 @@ void DoSOThing()
 	std::cout << h.id << " " << h.length << " " << h.count << std::endl;
 }
 
+namespace boost
+{
+	namespace serialization
+	{
+		template<class Archive>
+		void serialize(Archive& ar, ChunkMesh::VVertex& v, const unsigned int version)
+		{
+			ar & v.pos[0];
+			ar & v.pos[1];
+			ar & v.pos[2];
+			ar & v.uvs[0];
+			ar & v.uvs[1];
+			ar & v.color[0];
+			ar & v.color[1];
+			ar & v.color[2];
+			ar & v.color[3];
+		}
+	}
+}
+
+typedef std::vector<ChunkMesh::VVertex> VertexList;
+
+void TestBoostVVSer()
+{
+
+	// create and open a character archive for output
+	std::ofstream ofs("filename", std::fstream::binary | std::fstream::out);
+
+	// create class instance
+	const ChunkMesh::VVertex g = ChunkMesh::FakeVVertex(); // (35, 59, 24.567f);
+
+	VertexList vin;
+	vin.push_back(g);
+
+	std::cout << "orig: " << g;
+
+	// save data to archive
+	{
+		//boost::archive::text_oarchive oa(ofs);
+		boost::archive::binary_oarchive oa(ofs);
+		// write class instance to archive
+		oa << vin;
+		// archive and stream closed when destructors are called
+	}
+
+
+	VertexList vout;
+
+	// ... some time later restore the class instance to its orginal state
+	{
+		//ChunkMesh::VVertex newg;
+		// create and open an archive for input
+		std::ifstream ifs("filename", std::fstream::binary | std::fstream::in);
+		boost::archive::binary_iarchive ia(ifs);
+		// read class state from archive
+		ia >> vout;
+		// archive and stream closed when destructors are called
+
+		std::cout << " vout size: " << vout.size();
+
+		std::cout << "read: " << vout[0];
+	}
+
+}
+
+namespace SerChunk
+{
+#define FTOINT 255.0F
+//#define ONE_OVER_255 0.01f
+#define ONE_OVER_255 0.00392156862f
+
+	struct SerPos
+	{
+		char whole, decimal;
+
+		SerPos(){}
+
+		SerPos(GLfloat f) 
+		{
+			/*int exp;
+			float d = frexp(f, &exp);
+			whole = ((int)(d * FTOINT));
+			ex = exp;*/
+			float i;
+			float d = modf(f, &i);
+			whole = i;
+			decimal = d * FTOINT;
+		}
+
+		operator GLfloat() const
+		{
+			return whole + decimal * ONE_OVER_255;
+			//return ldexp((float)whole * ONE_OVER_255, (int)ex); // whole + ex * ONE_OVER_255;
+		}
+	};
+
+	struct Ser01
+	{
+		char decimal;
+
+		Ser01(){}
+
+		Ser01(GLfloat f) 
+		{ 
+			float exp;
+			decimal = (int)(modf(f, &exp) * FTOINT);
+			
+		}
+
+		operator GLfloat() const
+		{
+			return decimal * ONE_OVER_255;
+		}
+	};
+
+	struct SerVVertex
+	{
+		SerPos pos[3];
+		Ser01 uvs[2];
+		Ser01 color[4];
+
+		SerVVertex(ChunkMesh::VVertex vv)
+		{
+			for (int i = 0; i < 3; ++i)
+			{
+				pos[i] = SerPos(vv.pos[i]);
+			}
+			for (int i = 0; i < 2; ++i)
+			{
+				uvs[i] = Ser01(vv.uvs[i]);
+			}
+			for (int i = 0; i < 4; ++i)
+			{
+				color[i] = Ser01(vv.color[i]);
+			}
+		}
+
+		operator ChunkMesh::VVertex() const
+		{
+			ChunkMesh::VVertex vv;
+			for (int i = 0; i < 3; ++i)
+			{
+				vv.pos[i] = pos[i];
+			}
+			for (int i = 0; i < 2; ++i)
+			{
+				vv.uvs[i] = uvs[i];
+			}
+			for (int i = 0; i < 4; ++i)
+			{
+				vv.color[i] = color[i];
+			}
+			return vv;
+		}
+
+	};
+}
+
+void testEXPs(GLfloat f)
+{
+	using namespace std;
+
+	int exp;
+	float sig = frexp(f, &exp);
+
+	char csig = (int)(sig * FTOINT);
+	float fsig = csig * ONE_OVER_255;
+	char ex = exp;
+
+	//std::cout << "ex: " << (int)ex << " exp: " << exp;
+	float fa = ldexp(fsig, (int)ex);
+
+
+	//std::cout << "f: " << f << " fa: " << fa << std::endl;
+
+	float i;
+	float frac = modf(f, &i);
+
+	char ci = (int)i;
+	char cf = (int)(frac * FTOINT);
+	
+	float fcf = (int)cf * ONE_OVER_255;
+	float fout = ci + fcf;
+
+	cout << "f : " << f << endl;
+	cout << "frac: " << frac << " cf: " << cf << " fcf: " << fcf << endl;
+	cout << "fout: " << fout << endl;
+
+
+
+}
+
+void TestSerVV()
+{
+	/*testEXPs(0.0f);
+	testEXPs(1.2f);
+	testEXPs(-72.5f);
+	testEXPs(-999999.7f);*/
+	TestBoostVVSer();
+	return;
+
+	for (int i = 0; i < 16; ++i)
+	{
+		testEXPs(i);
+		testEXPs(i + .9f);
+	}
+	
+
+	auto vv = ChunkMesh::FakeVVertex();
+
+	SerChunk::SerVVertex sv = vv;
+
+	GLfloat dif;
+	ChunkMesh::VVertex s = sv;
+	for (int i = 0; i < 3; ++i)
+	{
+		 dif = vv.pos[i] - s.pos[i];
+		 std::cout << "vv: " << vv.pos[i] << " s: " << s.pos[i] << " dif " << i << ": " << dif << std::endl;
+	}
+	std::cout << std::endl;
+	for (int i = 0; i < 2; ++i)
+	{
+		dif = vv.uvs[i] - s.uvs[i];
+		std::cout << "vv: " << vv.uvs[i] << " s: " << s.uvs[i] << " dif " << i << ": " << dif << std::endl;
+	}
+	std::cout << std::endl;
+	for (int i = 0; i < 4; ++i)
+	{
+		dif = vv.color[i] - s.color[i];
+		std::cout << "vv: " << vv.color[i] << " s: " << s.color[i] << " dif " << i << ": " << dif << std::endl;
+	}
+	std::cout << std::endl;
+}
+
+void DoVertThing()
+{
+	ChunkMesh::VVertex hh = ChunkMesh::FakeVVertex();
+
+	std::cout  << "HH pos 0 :"<< hh.pos[0] <<
+		//" " << h.length << " " << h.count << 
+		std::endl;
+
+	std::fstream fh;
+	fh.open("test.txt", std::fstream::out | std::fstream::binary);
+	fh.write((char*)&hh, sizeof(ChunkMesh::VVertex));
+	fh.close();
+
+	fh.open("test.txt", std::fstream::in | std::fstream::binary);
+
+	ChunkMesh::VVertex h;
+	fh.read((char*)&h.pos, sizeof(h.pos) / sizeof(GLfloat));
+	//fh.read((char*)&h.length, sizeof(h.length));
+	//fh.read((char*)&h.count, sizeof(h.count));
+
+	fh.close();
+
+	std::cout << " h pos 0: " << h.pos[0] << 
+		//" " << h.length << " " << h.count << 
+		std::endl;
+}
+
 void IOChunk::Test()
 {
 	//DoSOThing(); return;
-
+	//DoVertThing(); return;
+	TestSerVV(); return;
 
 	int howMany = 5;
 	//std::vector<int> data(howMany);
@@ -69,18 +344,23 @@ void IOChunk::Test()
 		data[i] = i;
 	}
 
-	std::basic_ofstream<int> ofp(bpath / "test.txt", std::fstream::out | std::fstream::binary);
+	std::ostringstream s;
+	s << bpath << "/test.txt";
+	std::basic_ofstream<int> ofp(s.str(), std::fstream::out | std::fstream::binary);
 	ofp.write((&data[0]), sizeof(data) * sizeof(data[0]));
 	ofp.close();
 
-	std::ifstream ifp(bpath / "test.txt", std::fstream::in | std::fstream::binary);
+	std::ifstream ifp(s.str(), std::fstream::in | std::fstream::binary);
 	if (!ifp.is_open())
 	{
 		std::cout << "file not open" << std::endl;
 		return;
 	}
 
-	std::basic_ifstream<int> stream(bpath / "test.txt", std::ios::in | std::ios::binary);
+	std::string pa = ResourcePath("test.txt");
+	std::cout << "got pa: " << pa << std::endl;
+
+	std::basic_ifstream<int> stream(s.str(), std::ios::in | std::ios::binary);
 	auto eos = std::istreambuf_iterator<int>();
 	auto buffer = std::vector<int>(std::istreambuf_iterator<int>(stream), eos);
 
@@ -137,21 +417,161 @@ void IOChunk::Test()
 	delete[] indata;*/
 }
 
-std::filesystem::path IOChunk::PathFor(veci3 cpos, bool drawable)
+std::string IOChunk::PathFor(veci3 cpos, bool drawable)
 {
 	std::ostringstream s;
+	s << bpath << "/";
 	s << (drawable ? "drawChunk" : "chunk") << cpos.ToFileNameString() << ".hello";
-	return (bpath / s.str()).string();
+	return s.str();
 }
 
-void IOChunk::WriteDrawableChunk(DrawableChunk & dc, veci3 cpos)
+std::string Append(std::string a, std::string b)
 {
+	std::ostringstream s;
+	s << a << b;
+	return s.str();
+}
+
+void IOChunk::WriteDrawableChunk(ChunkMesh::MeshData & md, veci3 cpos)
+{
+	auto cfile = PathFor(cpos, true);
+	//TRI OFFSETS
+	{
+		std::ofstream ofp(Append(cfile, ".off"), std::fstream::out | std::fstream::binary);
+		boost::archive::binary_oarchive oa(ofp);
+		oa << md.lodTriOffsets;
+		ofp.close();
+
+		//auto cfileOff = Append(cfile, ".off");
+		//int size = sizeof(md.lodTriOffsets) / sizeof(md.lodTriOffsets[0]);
+		//std::cout << "write size array: " << sizeof(md.lodTriOffsets) << " size of [0]: " << sizeof(md.lodTriOffsets[0]) << std::endl;
+
+		//std::basic_ofstream<int> ofp(cfileOff, std::fstream::out | std::fstream::binary);
+		//ofp.write(&md.lodTriOffsets[0], size);
+		//ofp.close();
+	}
+
+	//TRIS
+	{
+		std::ofstream ofp(Append(cfile, ".tris"), std::fstream::out | std::fstream::binary);
+		boost::archive::binary_oarchive oa(ofp);
+		oa << md.tris;
+		ofp.close();
+		
+		/*std::basic_ofstream<TRI_T> ofp(Append(cfile, ".tris"), std::fstream::out | std::fstream::binary);
+		ofp.write(md.tris.data(), md.tris.size());
+		ofp.close();*/
+	}
+
+	//VERTS
+	{
+		std::ofstream ofp(Append(cfile, ".verts"), std::fstream::out | std::fstream::binary);
+		boost::archive::binary_oarchive oa(ofp);
+		oa << md.verts;
+		ofp.close();
+	}
+
+}
+
+bool IOChunk::ReadTriOffsets(ChunkMesh::MeshData& md, veci3 cpos)
+{
+	auto cfile = PathFor(cpos, true);
+
+	std::ifstream ifc(Append(cfile, ".off"), std::fstream::in | std::fstream::binary);
+	if (!ifc.is_open()) { return false; }
+
+	boost::archive::binary_iarchive ia(ifc);
+	ia >> md.lodTriOffsets;
+	ifc.close();
+	return true;
+
+	/*auto cfile = PathFor(cpos, true);
+	auto cfileoff = Append(cfile, ".off");
+
+	std::basic_ifstream<int> ifc(cfileoff, std::fstream::in || std::fstream::binary);
+
+	if (!ifc.is_open()) { return false; }
+
+	auto eos = std::istreambuf_iterator<int>();
+	auto buffer = std::vector<int>(std::istreambuf_iterator<int>(ifc), eos);
+
+	for (int i = 0; i < buffer.size(); ++i)
+	{
+		std::cout << i << ": " << buffer[i] << ", ";
+	}std::cout << std::endl;
+
+	ifc.seekg(0, std::ios::end);
+	std::streampos size = ifc.tellg();
+	if (size != NUM_LODS)
+	{
+		std::cout << "wrong stream char/byte size : " << size << std::endl; return false;
+	}
+	ifc.seekg(0);
+
+	ifc.read(md.lodTriOffsets, NUM_LODS * sizeof(int));
+
+	ifc.close();
+	return true;*/
+}
+
+bool IOChunk::ReadTris(ChunkMesh::MeshData& md, veci3 cpos)
+{
+
+	auto cfile = PathFor(cpos, true);
+
+	std::ifstream ifc(Append(cfile, ".tris"), std::fstream::in | std::fstream::binary);
+	if (!ifc.is_open()) { return false; }
+
+	boost::archive::binary_iarchive ia(ifc);
+	ia >> md.tris;
+	ifc.close();
+	return true;
+
+	//auto cfileoff = Append(cfile, ".tris");
+
+	//std::basic_ifstream<TRI_T> ifc(cfileoff, std::fstream::in || std::fstream::binary);
+
+	//if (!ifc.is_open()) { return false; }
+
+	//auto eos = std::istreambuf_iterator<TRI_T>();
+	////auto buffer = std::vector<TRI_T>(std::istreambuf_iterator<TRI_T>(ifc), eos);
+	//md.tris = std::vector<TRI_T>(std::istreambuf_iterator<TRI_T>(ifc), eos);
+
+
+	//std::cout << "*** tris: ";
+	//for (int i = 0; i < md.tris.size(); ++i)
+	//{
+	//	std::cout << i << ": " << md.tris[i] << ", ";
+	//}std::cout << std::endl;
+
+
+	//ifc.close();
+	//return true;
+}
+
+bool IOChunk::ReadVerts(ChunkMesh::MeshData& md, veci3 cpos)
+{
+	auto cfile = PathFor(cpos, true);
+	std::ifstream ifc(Append(cfile, ".verts"), std::fstream::in | std::fstream::binary);
+	if (!ifc.is_open()) { return false; }
+
+	boost::archive::binary_iarchive ia(ifc);
+	ia >> md.verts;
+	ifc.close();
+	return true;
+}
+
+bool IOChunk::ReadConstructDrawableChunk(ChunkMesh::MeshData& md, veci3 cpos)
+{
+	if (!ReadTriOffsets(md, cpos)) { return false; }
+	if (!ReadTris(md, cpos)) { return false; }
+	if (!ReadVerts(md, cpos)) { return false; }
+	return true;
 }
 
 void IOChunk::WriteChunk(Chunk& chunk)
 {
-	std::cout << "." << std::endl;
-	fs::path cfile = PathFor(chunk.chunkPosition(), false);
+	auto cfile = PathFor(chunk.chunkPosition(), false);
 	Voxel* data = chunk.getData();
 	int size = chunk.getSizeBytes();
 	if (size == 0) { return; }
@@ -165,8 +585,8 @@ void IOChunk::WriteChunk(Chunk& chunk)
 
 bool IOChunk::ReadConstructChunk(Chunk& chunk)
 {
-	
 	auto cfile = PathFor(chunk.chunkPosition(), false);
+
 	std::basic_ifstream<unsigned char> ifc(cfile, std::fstream::in || std::fstream::binary);
 
 	if (!ifc.is_open()) 
@@ -190,7 +610,6 @@ bool IOChunk::ReadConstructChunk(Chunk& chunk)
 	ifc.close();
 
 	chunk.TakeVoxelArray((Voxel*) stor);
-	//chunk.setIsMeshDirty(false);
 	chunk.SetBuildStage(BCSHAS_GENERATED);
 	chunk.updateIsEmpty();
 	chunk.Debug();

@@ -76,12 +76,12 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\melsov\Documents\Visual Studio 2017\Projects\OGLVoxelEngine\external\libmorton\include;C:\dev\soil\src;C:\Users\melsov\Documents\Visual Studio 2017\Projects\OGLVoxelEngine\common;C:\Users\melsov\Documents\Visual Studio 2017\Projects\OGLVoxelEngine\external\glm-0.9.7.1;C:\Users\melsov\Documents\Visual Studio 2017\Projects\OGLVoxelEngine\external\glfw-3.1.2\include\GLFW;C:\Users\melsov\Documents\Visual Studio 2017\Projects\OGLVoxelEngine\external\glew-1.13.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\dev\boost_1_69_0;C:\Users\melsov\Documents\Visual Studio 2017\Projects\OGLVoxelEngine\external\libmorton\include;C:\dev\soil\src;C:\Users\melsov\Documents\Visual Studio 2017\Projects\OGLVoxelEngine\common;C:\Users\melsov\Documents\Visual Studio 2017\Projects\OGLVoxelEngine\external\glm-0.9.7.1;C:\Users\melsov\Documents\Visual Studio 2017\Projects\OGLVoxelEngine\external\glfw-3.1.2\include\GLFW;C:\Users\melsov\Documents\Visual Studio 2017\Projects\OGLVoxelEngine\external\glew-1.13.0\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalDependencies>opengl32.lib;libSOIL.a;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>C:\dev\soil\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\dev\boost_1_69_0\stage\lib;C:\dev\soil\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -164,6 +164,7 @@
     <ClCompile Include="MathHelper.h" />
     <ClCompile Include="MeshData.cpp" />
     <ClCompile Include="Mesher.cpp" />
+    <ClCompile Include="platform.mm" />
     <ClCompile Include="ProximityList.cpp" />
     <ClCompile Include="ReadOnlyMap.cpp" />
   </ItemGroup>
@@ -207,6 +208,7 @@
     <ClInclude Include="MeshData.h" />
     <ClInclude Include="Mesher.h" />
     <ClInclude Include="MortonChunk.h" />
+    <ClInclude Include="platform.h" />
     <ClInclude Include="ProximityList.h" />
     <ClInclude Include="readerwriterqueue.h" />
     <ClInclude Include="ReadOnlyMap.h" />

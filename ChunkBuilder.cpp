@@ -55,6 +55,27 @@ void ChunkBuilder::Mesh()
 	md.debug();
 }
 
+bool ChunkBuilder::ReadMesh(IOChunk & iochunk)
+{
+
+	if (iochunk.ReadConstructDrawableChunk(rubiks.center()->meshData, rubiks.center()->chunkPosition()))
+	{
+		//TEST
+		/*ChunkMesh::MeshData cmd;
+		ChunkMesh::CreateMeshM(rubiks, cmd);
+
+		if (ChunkMesh::AssertEqual(rubiks.center()->meshData, cmd))
+		{
+			std::cout << "&&&&&&&&&&&&&&&& rmd cmd are eq" << std::endl;
+		}*/
+		// end
+
+		rubiks.center()->setIsMeshDirty(false);
+		return true;
+	}
+	return false;
+}
+
 //void ChunkBuilder::Mesh(ChunkMesh::LODMeshDataSet & set)
 //{
 //	if (!rubiks.center()->getIsDirty())
